@@ -2,6 +2,12 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.3.1
+- **Corrige crash** ao renderizar um mob escalado (`IllegalStateException: Not building!`): a barra de vida era escrita num buffer de vértices já encerrado pelo desenho do texto.
+- **Corrige a placa dos mobs**: o fundo estava sendo desenhado na frente do texto (profundidade com sinal invertido), escondendo o nome. Agora fundo e barra ficam atrás do texto.
+- Testado em cliente real: placas, tela K, botões de atributo e gasto de stamina.
+- Dev: `./gradlew runClient -PquickPlay=<mundo>` abre direto um mundo de `run/saves`.
+
 ## 0.3.0
 - **Pontos de atributo estilo Skyrim**: cada level do personagem dá 1 ponto para gastar em **Vida**, **Stamina** ou **Mana** (tela K, botões "+").
   - Vida: +1 coração por ponto.
