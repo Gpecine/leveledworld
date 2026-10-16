@@ -34,6 +34,7 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 - Bosses (Wither, Ender Dragon, Warden, Elder Guardian) têm level mínimo 20.
 - Bônus por level acima de 1: **+5% vida**, **+3% dano**, **+0.2 armadura**.
 - O level fica salvo no mob — recarregar o chunk não muda nada.
+- Sem jogador por perto, usa a média de level dos jogadores da dimensão (ou 1 se não houver ninguém).
 
 ### Interface
 - **HUD**: `Lv. X` + barra de XP no canto superior esquerdo.
@@ -49,7 +50,7 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 | `/rpg mob <entidade>` — mostra o level de um mob | OP |
 
 ## Configuração
-`saves/<mundo>/serverconfig/leveledworld-server.toml` — multiplicador de XP, levels máximos,
+`config/leveledworld-server.toml` (pode ser sobrescrito por mundo em `saves/<mundo>/serverconfig/`) — multiplicador de XP, levels máximos,
 raio de busca, faixa de level dos mobs (min/max factor) e bônus de atributos por level.
 
 ## Build e teste
