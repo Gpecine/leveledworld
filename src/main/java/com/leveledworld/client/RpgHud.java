@@ -22,6 +22,7 @@ public final class RpgHud {
         Minecraft mc = Minecraft.getInstance();
         SyncRpgDataPayload data = ClientRpgData.get();
         if (data == null || mc.options.hideGui || mc.player == null || mc.player.isSpectator()) return;
+        if (mc.screen instanceof StatusScreen) return;  // a tela K já mostra tudo
         Font font = mc.font;
 
         RpgUi.panel(g, X, Y, W, H);

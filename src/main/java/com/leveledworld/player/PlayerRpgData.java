@@ -37,6 +37,7 @@ public final class PlayerRpgData {
     int staminaRegenDelay;
     float lastSentStamina = Float.NaN;
     float lastSentMagicka = Float.NaN;
+    int lastLevelSoundTick;
 
     public PlayerRpgData() {
         this(1, 0, Map.of(), 0, 0, 0, 0, -1f, -1f);

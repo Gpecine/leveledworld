@@ -2,6 +2,32 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.5.0
+### Perks por skill (constelações)
+- Cada skill tem **4 perks** desbloqueados automaticamente nos níveis 25, 50, 75 e 100:
+  - **Combate**: +10% / +20% dano corpo-a-corpo, ataques gastam 50% menos stamina, 15% de crítico (×1,5).
+  - **Arquearia**: +10% / +20% / +30% dano à distância, 15% de crítico (×1,5).
+  - **Bloqueio**: bloquear recupera stamina, devolve 25% do dano, empurra o atacante, devolve 50%.
+  - **Armadura**: até 5% / 10% / 15% / 20% menos dano (proporcional às peças).
+  - **Mineração**: +15% / +30% velocidade com picareta, 10% / 20% de minério dobrado (sem efeito com Toque de Seda).
+  - **Lenhador**: +20% / +40% velocidade com machado, 15% / 30% de tronco extra.
+  - **Ferraria**: 10% / 20% / 30% / 40% de chance do equipamento fabricado sair encantado (cada vez mais forte).
+- Mensagem e som próprio ao desbloquear um perk.
+
+### Tela K nova (inspirada no Skyrim)
+- Céu estrelado com uma **constelação por skill** no formato do símbolo (espada, arco, escudo, elmo, picareta, machado, bigorna).
+- Carrossel: **arraste para os lados**, setas, A/D, roda do mouse ou clique numa constelação lateral.
+- As estrelas grandes são os perks (douradas quando desbloqueadas); passe o mouse para ver o efeito.
+- Painel inferior: level, XP e **Mana / Vida / Stamina** (ordem do Skyrim) com botões "+" que só aparecem quando há pontos.
+- O HUD some enquanto a tela está aberta.
+
+### Ajustes pedidos
+- **Som de level up novo e original** (tambor, trompas que resolvem para acorde maior, coro e sinos), tocado só para o jogador.
+- **Um único som** mesmo subindo vários levels de uma vez (antes duplicava e ficava alto).
+- **Vida: +4 HP (2 corações) por ponto** (antes 2). A chave da config mudou para `healthPerAttributePoint` para o novo valor valer em configs existentes.
+- **Stamina agora também dá +0,5% de velocidade de corrida por ponto** (máx. +15%), só enquanto corre.
+- XP de personagem por level de skill reduzido para **75%** (`characterXpPerSkillLevel`).
+
 ## 0.4.0
 ### Visual novo (estilo RPG de fantasia)
 - **HUD**: painel com moldura dourada, medalhão com o level e barras com gradiente/brilho/marcações (XP dourado, stamina verde, mana azul). Selo dourado pulsante `+N` quando há pontos livres.

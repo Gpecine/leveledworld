@@ -1,0 +1,10 @@
+{
+  "level_up": {
+    "sounds": [{ "name": "leveledworld:level_up", "stream": false }],
+    "subtitle": "subtitles.leveledworld.level_up"
+  },
+  "perk_unlock": {
+    "sounds": [{ "name": "leveledworld:perk_unlock", "stream": false }],
+    "subtitle": "subtitles.leveledworld.perk_unlock"
+  }
+}

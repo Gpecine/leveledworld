@@ -12,6 +12,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 /** Pontos de atributo (Vida/Stamina/Mana) e os recursos stamina e mana. */
 public final class AttributeService {
     private static final ResourceLocation HEALTH_MODIFIER = LeveledWorld.id("health_points");
+    private static final ResourceLocation SPRINT_MODIFIER = LeveledWorld.id("stamina_sprint_speed");
 
     public static float maxStamina(PlayerRpgData data) {
         return (float) (LWConfig.BASE_STAMINA.get() + LWConfig.STAMINA_PER_POINT.get() * data.points(RpgAttribute.STAMINA));
@@ -80,9 +81,35 @@ public final class AttributeService {
         return enough;
     }
 
+    /** Recupera stamina (ex.: perk de bloqueio). */
+    public static void restoreStamina(ServerPlayer player, double amount) {
+        PlayerRpgData data = LevelingService.get(player);
+        data.setStamina((float) Math.min(maxStamina(data), data.stamina() + amount));
+    }
+
+    /** Bônus de velocidade de corrida pelos pontos em Stamina; aplicado só enquanto corre. */
+    public static double sprintSpeedBonus(PlayerRpgData data) {
+        return Math.min(LWConfig.MAX_SPRINT_SPEED_BONUS.get(),
+                LWConfig.SPRINT_SPEED_PER_STAMINA_POINT.get() * data.points(RpgAttribute.STAMINA));
+    }
+
+    private static void updateSprintModifier(ServerPlayer player, PlayerRpgData data) {
+        AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
+        if (speed == null) return;
+        double bonus = player.isSprinting() ? sprintSpeedBonus(data) : 0;
+        AttributeModifier current = speed.getModifier(SPRINT_MODIFIER);
+        if (bonus <= 0) {
+            if (current != null) speed.removeModifier(SPRINT_MODIFIER);
+        } else if (current == null || current.amount() != bonus) {
+            speed.removeModifier(SPRINT_MODIFIER);
+            speed.addTransientModifier(new AttributeModifier(SPRINT_MODIFIER, bonus, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+        }
+    }
+
     /** Chamado a cada tick do jogador no servidor: gasto por corrida, regeneração e sync. */
     public static void tick(ServerPlayer player) {
         PlayerRpgData data = LevelingService.get(player);
+        updateSprintModifier(player, data);
         float maxStamina = maxStamina(data);
         float maxMagicka = maxMagicka(data);
         if (data.stamina() < 0) data.setStamina(maxStamina);

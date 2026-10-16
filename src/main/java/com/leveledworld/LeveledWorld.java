@@ -19,6 +19,7 @@ public class LeveledWorld {
 
     public LeveledWorld(IEventBus modBus, ModContainer container) {
         RpgAttachments.ATTACHMENT_TYPES.register(modBus);
+        RpgSounds.SOUND_EVENTS.register(modBus);
         modBus.addListener(RpgNetwork::register);
         container.registerConfig(ModConfig.Type.SERVER, LWConfig.SPEC);
         container.registerConfig(ModConfig.Type.CLIENT, LWClientConfig.SPEC);

@@ -20,17 +20,21 @@ o personagem evolui usando skills, e **o mundo inteiro escala com o seu level** 
 - XP para o próximo level da skill: `0.5 × level^1.95 + 10`.
 
 ### Level do personagem
-- Cada vez que uma skill sobe, o personagem ganha XP igual ao novo level da skill (igual ao Skyrim).
+- Cada vez que uma skill sobe, o personagem ganha XP igual a 75% do novo level da skill.
 - XP para o próximo level do personagem: `(level + 3) × 25`.
 - Persiste ao morrer.
+
+### Perks (constelações)
+Cada skill desbloqueia 4 perks nos níveis 25, 50, 75 e 100 — veja a lista completa no [CHANGELOG](CHANGELOG.md#050)
+ou passe o mouse sobre as estrelas grandes na tela **K**.
 
 ### Atributos (Vida / Stamina / Mana)
 Cada level do personagem dá **1 ponto** para investir na tela **K**:
 
 | Atributo | Por ponto | Uso |
 |---|---|---|
-| Vida | +1 coração | vida máxima |
-| Stamina | +10 (base 100) | correr (10/s), pular (4) e atacar (3); regenera 15/s após 1s. Sem stamina, não dá para correr |
+| Vida | +2 corações | vida máxima |
+| Stamina | +10 (base 100) e +0,5% de velocidade de corrida (máx. +15%) | correr (10/s), pular (4) e atacar (3); regenera 15/s após 1s. Sem stamina, não dá para correr |
 | Mana | +10 (base 100) | regenera 3/s; será usada pelo sistema de magias |
 
 ### Mundo escalado
@@ -55,7 +59,7 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 
 ### Interface
 - **HUD**: painel dourado com medalhão de level, barras de XP (dourada), stamina (verde) e mana (azul), e selo `+N` de pontos livres. Aviso de **LEVEL UP** ao subir.
-- **Tecla `K`**: tela de status com level, atributos (botões "+" para gastar pontos) e todas as skills.
+- **Tecla `K`**: céu de constelações (uma por skill) para girar arrastando, com os perks de cada skill, e o painel do personagem com Mana / Vida / Stamina e botões "+" para gastar pontos.
 - **Placa nos mobs**: medalhão com o level + nome + barra de vida. A cor do medalhão indica a dificuldade
   em relação a você: cinza (muito mais fraco), verde, dourado (equivalente), laranja, vermelho com ☠ (muito mais forte).
   Configurável em `config/leveledworld-client.toml` (ligar/desligar, distância, barra de vida).
@@ -92,7 +96,7 @@ Roteiro de teste rápido:
 4. Morrer e relogar → level e skills mantidos.
 
 ## Próximos passos (ideias)
-- Perks por skill e sistema de magias usando a mana.
+- Sistema de magias usando a mana.
 - Bônus de dificuldade por dimensão (Nether/End).
 
 ## Publicar uma nova versão

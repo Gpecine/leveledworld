@@ -11,12 +11,15 @@ public final class LWConfig {
     public static final ModConfigSpec.IntValue SKILL_START_LEVEL;
     public static final ModConfigSpec.IntValue SKILL_MAX_LEVEL;
     public static final ModConfigSpec.IntValue MAX_PLAYER_LEVEL;
+    public static final ModConfigSpec.DoubleValue CHARACTER_XP_PER_SKILL_LEVEL;
 
     // Atributos
     public static final ModConfigSpec.IntValue POINTS_PER_LEVEL;
     public static final ModConfigSpec.DoubleValue HEALTH_PER_POINT;
     public static final ModConfigSpec.DoubleValue BASE_STAMINA;
     public static final ModConfigSpec.DoubleValue STAMINA_PER_POINT;
+    public static final ModConfigSpec.DoubleValue SPRINT_SPEED_PER_STAMINA_POINT;
+    public static final ModConfigSpec.DoubleValue MAX_SPRINT_SPEED_BONUS;
     public static final ModConfigSpec.DoubleValue BASE_MAGICKA;
     public static final ModConfigSpec.DoubleValue MAGICKA_PER_POINT;
     public static final ModConfigSpec.DoubleValue SPRINT_STAMINA_PER_SECOND;
@@ -57,17 +60,23 @@ public final class LWConfig {
                 .defineInRange("skillMaxLevel", 100, 1, 1000);
         MAX_PLAYER_LEVEL = b.comment("Level máximo do personagem.")
                 .defineInRange("maxPlayerLevel", 100, 1, 1000);
+        CHARACTER_XP_PER_SKILL_LEVEL = b.comment("XP de personagem ganho a cada level de skill = novo level da skill × este valor.")
+                .defineInRange("characterXpPerSkillLevel", 0.75, 0.0, 100.0);
         b.pop();
 
         b.push("attributes");
         POINTS_PER_LEVEL = b.comment("Pontos de atributo ganhos a cada level do personagem.")
                 .defineInRange("pointsPerLevel", 1, 0, 100);
-        HEALTH_PER_POINT = b.comment("Vida máxima ganha por ponto em Vida (2 = 1 coração).")
-                .defineInRange("healthPerPoint", 2.0, 0.0, 100.0);
+        HEALTH_PER_POINT = b.comment("Vida máxima ganha por ponto em Vida (4 = 2 corações).")
+                .defineInRange("healthPerAttributePoint", 4.0, 0.0, 100.0);
         BASE_STAMINA = b.comment("Stamina máxima sem pontos.")
                 .defineInRange("baseStamina", 100.0, 1.0, 10000.0);
         STAMINA_PER_POINT = b.comment("Stamina máxima ganha por ponto em Stamina.")
                 .defineInRange("staminaPerPoint", 10.0, 0.0, 1000.0);
+        SPRINT_SPEED_PER_STAMINA_POINT = b.comment("Bônus de velocidade de corrida por ponto em Stamina (0.005 = +0.5%).")
+                .defineInRange("sprintSpeedPerStaminaPoint", 0.005, 0.0, 1.0);
+        MAX_SPRINT_SPEED_BONUS = b.comment("Bônus máximo de velocidade de corrida vindo da Stamina (0.15 = +15%).")
+                .defineInRange("maxSprintSpeedBonus", 0.15, 0.0, 5.0);
         BASE_MAGICKA = b.comment("Mana máxima sem pontos.")
                 .defineInRange("baseMagicka", 100.0, 1.0, 10000.0);
         MAGICKA_PER_POINT = b.comment("Mana máxima ganha por ponto em Mana.")
