@@ -8,55 +8,52 @@ import com.leveledworld.player.RpgAttribute;
 import com.leveledworld.skill.Skill;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.EnumMap;
 import java.util.Map;
 
-/** Tela de status (tecla K): personagem e atributos à esquerda, skills à direita. */
+/** Tela de status (tecla K) no mesmo estilo do HUD: personagem e atributos à esquerda, skills à direita. */
 public class StatusScreen extends Screen {
     private static final int COLUMN_WIDTH = 170;
-    private static final int GAP = 20;
-    private static final int PANEL_WIDTH = COLUMN_WIDTH * 2 + GAP;
-    private static final int SKILL_ROW = 18;
-    private static final int ATTRIBUTE_ROW = 24;
-    private static final int BUTTON_SIZE = 16;
+    private static final int GAP = 24;
+    private static final int PAD = 12;
+    private static final int PANEL_WIDTH = COLUMN_WIDTH * 2 + GAP + PAD * 2;
+    private static final int PANEL_HEIGHT = 196;
+    private static final int SKILL_ROW = 19;
+    private static final int ATTRIBUTE_ROW = 26;
+    private static final int BUTTON_SIZE = 14;
 
     private final Map<RpgAttribute, Button> buttons = new EnumMap<>(RpgAttribute.class);
-    private int left;
+    private int left;   // borda do painel
     private int top;
 
     public StatusScreen() {
         super(Component.translatable("screen.leveledworld.status"));
     }
 
-    private int panelHeight() {
-        return 24 + Skill.values().length * SKILL_ROW;
-    }
+    private int colLeft() { return left + PAD; }
+    private int colRight() { return left + PAD + COLUMN_WIDTH + GAP; }
+    private int attributesTop() { return top + 96; }
 
     @Override
     protected void init() {
         left = (width - PANEL_WIDTH) / 2;
-        top = Math.max(10, (height - panelHeight()) / 2);
+        top = Math.max(4, (height - PANEL_HEIGHT) / 2);
         buttons.clear();
         int y = attributesTop();
         for (RpgAttribute attribute : RpgAttribute.values()) {
-            Button b = Button.builder(Component.literal("+"),
-                            btn -> PacketDistributor.sendToServer(new SpendPointPayload(attribute.ordinal())))
-                    .bounds(left + COLUMN_WIDTH - BUTTON_SIZE, y - 2, BUTTON_SIZE, BUTTON_SIZE)
-                    .tooltip(net.minecraft.client.gui.components.Tooltip.create(
-                            Component.translatable(attribute.translationKey() + ".desc")))
-                    .build();
+            Button b = new PlusButton(colLeft() + COLUMN_WIDTH - BUTTON_SIZE, y + 2, BUTTON_SIZE,
+                    btn -> PacketDistributor.sendToServer(new SpendPointPayload(attribute.ordinal())));
+            b.setTooltip(Tooltip.create(Component.translatable(attribute.translationKey() + ".desc")));
             buttons.put(attribute, addRenderableWidget(b));
             y += ATTRIBUTE_ROW;
         }
         updateButtons();
-    }
-
-    private int attributesTop() {
-        return top + 64;
     }
 
     @Override
@@ -74,74 +71,86 @@ public class StatusScreen extends Screen {
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g, mouseX, mouseY, partialTick);
-        g.fill(left - 10, top - 10, left + PANEL_WIDTH + 10, top + panelHeight() + 6, 0xC0101018);
-        g.drawCenteredString(font, title, width / 2, top - 2, 0xFFFFFF);
+        RpgUi.panel(g, left, top, PANEL_WIDTH, PANEL_HEIGHT);
+        RpgUi.header(g, font, title.copy().withStyle(s -> s.withBold(true)), width / 2, top + 8, PANEL_WIDTH - 60);
 
         SyncRpgDataPayload data = ClientRpgData.get();
         if (data == null) {
-            g.drawCenteredString(font, Component.translatable("screen.leveledworld.no_data"), width / 2, top + 24, 0xAAAAAA);
+            g.drawCenteredString(font, Component.translatable("screen.leveledworld.no_data"), width / 2, top + 40, RpgUi.TEXT_DIM);
             return;
         }
 
         renderCharacter(g, data);
         renderSkills(g, data);
-        // Botões por último, por cima do painel.
+        // divisória vertical entre as colunas
+        int vx = left + PAD + COLUMN_WIDTH + GAP / 2;
+        g.fill(vx, top + 30, vx + 1, top + PANEL_HEIGHT - 12, RpgUi.GOLD_DARK);
         for (var widget : renderables) widget.render(g, mouseX, mouseY, partialTick);
     }
 
     private void renderCharacter(GuiGraphics g, SyncRpgDataPayload data) {
-        int y = top + 14;
-        g.drawString(font, Component.translatable("screen.leveledworld.character_level", data.level()), left, y, 0xFFD700);
-        Component xp = xpText(data.xp(), data.xpToNext());
-        g.drawString(font, xp, left + COLUMN_WIDTH - font.width(xp), y, 0xCCCCCC);
-        RpgHud.drawBar(g, left, y + 11, COLUMN_WIDTH, 4, RpgHud.progress(data.xp(), data.xpToNext()), RpgHud.XP_COLOR);
+        int x = colLeft();
+        int y = top + 32;
+        RpgUi.levelBadge(g, font, x, y, 28, data.level());
 
-        y += 24;
-        int pointsColor = data.unspentPoints() > 0 ? 0xFFFF55 : 0x888888;
-        g.drawString(font, Component.translatable("screen.leveledworld.points", data.unspentPoints()), left, y, pointsColor);
+        int tx = x + 36;
+        g.drawString(font, Component.translatable("screen.leveledworld.character_level", data.level()), tx, y + 2, RpgUi.GOLD_LIGHT);
+        Component xp = xpText(data.xp(), data.xpToNext());
+        g.drawString(font, xp, x + COLUMN_WIDTH - font.width(xp), y + 2, RpgUi.TEXT_DIM);
+        RpgUi.bar(g, tx, y + 15, COLUMN_WIDTH - 36, 7, RpgHud.progress(data.xp(), data.xpToNext()), RpgUi.XP);
+
+        // Selo de pontos disponíveis
+        y += 40;
+        Component pts = Component.translatable("screen.leveledworld.points", data.unspentPoints());
+        if (data.unspentPoints() > 0) {
+            float pulse = 0.7f + 0.3f * Mth.sin((System.currentTimeMillis() % 1200) / 1200f * Mth.TWO_PI);
+            int w = font.width(pts) + 10;
+            g.fill(x - 1, y - 1, x + w + 1, y + 13, 0xFF000000);
+            g.fillGradient(x, y, x + w, y + 12, RpgUi.fade(RpgUi.GOLD_LIGHT, pulse), RpgUi.fade(RpgUi.GOLD_DARK, pulse));
+            g.drawString(font, pts, x + 5, y + 2, 0xFF1A1206, false);
+        } else {
+            g.drawString(font, pts, x, y + 2, RpgUi.TEXT_DIM);
+        }
 
         ResourcesPayload res = ClientRpgData.resources();
         var player = minecraft != null ? minecraft.player : null;
         y = attributesTop();
         for (RpgAttribute attribute : RpgAttribute.values()) {
             int points = attribute.ordinal() < data.attributePoints().length ? data.attributePoints()[attribute.ordinal()] : 0;
-            Component name = Component.translatable(attribute.translationKey()).append(" (" + points + ")");
-            g.drawString(font, name, left, y, 0xE0E0E0);
-
             float value = 0, max = 0;
-            int color = 0xFFCC3333;
+            int[] gradient = RpgUi.HEALTH;
             switch (attribute) {
-                case HEALTH -> {
-                    if (player != null) { value = player.getHealth(); max = player.getMaxHealth(); }
-                }
-                case STAMINA -> {
-                    if (res != null) { value = res.stamina(); max = res.maxStamina(); }
-                    color = RpgHud.STAMINA_COLOR;
-                }
-                case MAGICKA -> {
-                    if (res != null) { value = res.magicka(); max = res.maxMagicka(); }
-                    color = RpgHud.MAGICKA_COLOR;
-                }
+                case HEALTH -> { if (player != null) { value = player.getHealth(); max = player.getMaxHealth(); } }
+                case STAMINA -> { if (res != null) { value = res.stamina(); max = res.maxStamina(); } gradient = RpgUi.STAMINA; }
+                case MAGICKA -> { if (res != null) { value = res.magicka(); max = res.maxMagicka(); } gradient = RpgUi.MAGICKA; }
             }
+            // ícone: losango na cor do atributo
+            g.fill(x + 1, y + 3, x + 6, y + 8, gradient[1]);
+            g.fill(x + 2, y + 2, x + 5, y + 9, gradient[0]);
+            Component name = Component.translatable(attribute.translationKey());
+            g.drawString(font, name, x + 10, y + 2, RpgUi.TEXT);
+            g.drawString(font, "+" + points, x + 12 + font.width(name), y + 2, RpgUi.GOLD);
             String amount = Math.round(value) + " / " + Math.round(max);
-            g.drawString(font, amount, left + COLUMN_WIDTH - BUTTON_SIZE - 4 - font.width(amount), y, 0xAAAAAA);
-            RpgHud.drawBar(g, left, y + 10, COLUMN_WIDTH - BUTTON_SIZE - 4, 3, RpgHud.progress(value, max), color);
+            int barRight = x + COLUMN_WIDTH - BUTTON_SIZE - 6;
+            g.drawString(font, amount, barRight - font.width(amount), y + 2, RpgUi.TEXT_DIM);
+            RpgUi.bar(g, x, y + 13, barRight - x, 4, RpgHud.progress(value, max), gradient);
             y += ATTRIBUTE_ROW;
         }
     }
 
     private void renderSkills(GuiGraphics g, SyncRpgDataPayload data) {
-        int x = left + COLUMN_WIDTH + GAP;
-        int y = top + 14;
-        g.drawString(font, Component.translatable("screen.leveledworld.skills"), x, y, 0xFFFFFF);
-        y += 14;
+        int x = colRight();
+        int y = top + 32;
+        g.drawString(font, Component.translatable("screen.leveledworld.skills"), x, y, RpgUi.GOLD_LIGHT);
+        RpgUi.divider(g, x, y + 11, COLUMN_WIDTH);
+        y += 18;
         for (Skill skill : Skill.values()) {
             int i = skill.ordinal();
-            g.drawString(font, Component.translatable(skill.translationKey()), x, y, 0xE0E0E0);
+            g.drawString(font, Component.translatable(skill.translationKey()), x, y, RpgUi.TEXT);
             String lvl = String.valueOf(data.skillLevels()[i]);
-            g.drawString(font, lvl, x + COLUMN_WIDTH - font.width(lvl), y, 0x80FF80);
-            RpgHud.drawBar(g, x, y + 10, COLUMN_WIDTH, 3,
-                    RpgHud.progress(data.skillXp()[i], data.skillXpToNext()[i]), 0xFF66CC66);
+            g.drawString(font, lvl, x + COLUMN_WIDTH - font.width(lvl), y, RpgUi.GOLD_LIGHT);
+            RpgUi.bar(g, x, y + 10, COLUMN_WIDTH, 3,
+                    RpgHud.progress(data.skillXp()[i], data.skillXpToNext()[i]), RpgUi.SKILL);
             y += SKILL_ROW;
         }
     }

@@ -45,11 +45,19 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 - O level fica salvo no mob — recarregar o chunk não muda nada.
 - Sem jogador por perto, usa a média de level dos jogadores da dimensão (ou 1 se não houver ninguém).
 
+### Recompensas escaladas
+- Orbes de XP **+5% por level** do mob e drops empilháveis **+2% por level**.
+- **Loot bônus** ao matar mobs: chance de 1% por level (máx. 50%).
+  - Level < 15: comum (pepitas, carvão, flechas...)
+  - Level 15–34: incomum, brilha (lingotes, esmeraldas, livros e equipamento de ferro encantados)
+  - Level 35+: raro, brilha e toca um som (diamantes, equipamento de diamante encantado, maçãs douradas, netherite scrap)
+- As tabelas ficam em `data/leveledworld/loot_table/bonus/` e podem ser sobrescritas por datapack.
+
 ### Interface
-- **HUD**: `Lv. X` (+ pontos livres), barra de XP (dourada), stamina (verde) e mana (azul) no canto superior esquerdo.
+- **HUD**: painel dourado com medalhão de level, barras de XP (dourada), stamina (verde) e mana (azul), e selo `+N` de pontos livres. Aviso de **LEVEL UP** ao subir.
 - **Tecla `K`**: tela de status com level, atributos (botões "+" para gastar pontos) e todas as skills.
-- **Placa nos mobs**: `Nome Lv. X` + barra de vida acima da cabeça. A cor do level indica a dificuldade
-  em relação a você: cinza (muito mais fraco), verde, branco (equivalente), laranja, vermelho (muito mais forte).
+- **Placa nos mobs**: medalhão com o level + nome + barra de vida. A cor do medalhão indica a dificuldade
+  em relação a você: cinza (muito mais fraco), verde, dourado (equivalente), laranja, vermelho com ☠ (muito mais forte).
   Configurável em `config/leveledworld-client.toml` (ligar/desligar, distância, barra de vida).
 
 ### Comandos
@@ -85,7 +93,6 @@ Roteiro de teste rápido:
 
 ## Próximos passos (ideias)
 - Perks por skill e sistema de magias usando a mana.
-- Loot e XP escalados pelo level do mob.
 - Bônus de dificuldade por dimensão (Nether/End).
 
 ## Publicar uma nova versão

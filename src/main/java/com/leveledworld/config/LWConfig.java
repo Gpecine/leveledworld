@@ -37,6 +37,14 @@ public final class LWConfig {
     public static final ModConfigSpec.DoubleValue DAMAGE_PER_LEVEL;
     public static final ModConfigSpec.DoubleValue ARMOR_PER_LEVEL;
 
+    // Recompensas
+    public static final ModConfigSpec.DoubleValue XP_PER_LEVEL;
+    public static final ModConfigSpec.DoubleValue DROPS_PER_LEVEL;
+    public static final ModConfigSpec.DoubleValue BONUS_LOOT_CHANCE_PER_LEVEL;
+    public static final ModConfigSpec.DoubleValue BONUS_LOOT_MAX_CHANCE;
+    public static final ModConfigSpec.IntValue UNCOMMON_LOOT_LEVEL;
+    public static final ModConfigSpec.IntValue RARE_LOOT_LEVEL;
+
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
 
@@ -96,6 +104,21 @@ public final class LWConfig {
                 .defineInRange("damagePerLevel", 0.03, 0.0, 10.0);
         ARMOR_PER_LEVEL = b.comment("Pontos de armadura somados por level acima do 1.")
                 .defineInRange("armorPerLevel", 0.2, 0.0, 10.0);
+        b.pop();
+
+        b.push("rewards");
+        XP_PER_LEVEL = b.comment("Bônus de orbes de XP por level do mob acima do 1 (0.05 = +5%).")
+                .defineInRange("xpPerLevel", 0.05, 0.0, 10.0);
+        DROPS_PER_LEVEL = b.comment("Bônus de quantidade nos drops empilháveis por level acima do 1 (0.02 = +2%).")
+                .defineInRange("dropsPerLevel", 0.02, 0.0, 10.0);
+        BONUS_LOOT_CHANCE_PER_LEVEL = b.comment("Chance de loot bônus por level do mob (0.01 = 1% por level). Só quando morto por jogador.")
+                .defineInRange("bonusLootChancePerLevel", 0.01, 0.0, 1.0);
+        BONUS_LOOT_MAX_CHANCE = b.comment("Chance máxima de loot bônus.")
+                .defineInRange("bonusLootMaxChance", 0.5, 0.0, 1.0);
+        UNCOMMON_LOOT_LEVEL = b.comment("Level do mob a partir do qual o loot bônus é incomum (data/leveledworld/loot_table/bonus/uncommon.json).")
+                .defineInRange("uncommonLootLevel", 15, 1, 10000);
+        RARE_LOOT_LEVEL = b.comment("Level do mob a partir do qual o loot bônus é raro (bonus/rare.json).")
+                .defineInRange("rareLootLevel", 35, 1, 10000);
         b.pop();
 
         SPEC = b.build();

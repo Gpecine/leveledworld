@@ -29,7 +29,8 @@ public final class SkillXpEvents {
 
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent.Post event) {
-        float damage = event.getNewDamage();
+        // Limita à vida máxima da vítima: dano excedente (ex.: golpe de 1000 num zumbi) não deve virar XP.
+        float damage = Math.min(event.getNewDamage(), event.getEntity().getMaxHealth());
         if (damage <= 0) return;
         DamageSource source = event.getSource();
 

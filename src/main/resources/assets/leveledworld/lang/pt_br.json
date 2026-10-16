@@ -28,5 +28,7 @@
   "attribute.leveledworld.stamina": "Stamina",
   "attribute.leveledworld.stamina.desc": "+10 de stamina máxima por ponto. Correr, pular e atacar gastam stamina.",
   "attribute.leveledworld.magicka": "Mana",
-  "attribute.leveledworld.magicka.desc": "+10 de mana máxima por ponto. Será usada pelo sistema de magias."
+  "attribute.leveledworld.magicka.desc": "+10 de mana máxima por ponto. Será usada pelo sistema de magias.",
+  "hud.leveledworld.level_up": "SUBIU DE LEVEL!",
+  "hud.leveledworld.level_up_sub": "Level %s  •  aperte K para distribuir pontos"
 }

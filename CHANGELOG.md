@@ -2,6 +2,22 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.4.0
+### Visual novo (estilo RPG de fantasia)
+- **HUD**: painel com moldura dourada, medalhão com o level e barras com gradiente/brilho/marcações (XP dourado, stamina verde, mana azul). Selo dourado pulsante `+N` quando há pontos livres.
+- **Aviso de LEVEL UP** no mesmo estilo, abaixo do HUD, por 4 segundos.
+- **Tela K** redesenhada no mesmo visual: medalhão, selo de pontos, ícones dos atributos, barras com gradiente e botões "+" dourados.
+- **Placas dos mobs**: medalhão com o level na cor da dificuldade (cinza → verde → dourado → laranja → vermelho com ☠), nome claro, moldura dourada e barra de vida com gradiente (verde/amarelo/vermelho).
+
+### Loot e XP escalados pelo level do mob
+- Orbes de XP: +5% por level do mob.
+- Drops empilháveis: +2% de quantidade por level.
+- **Loot bônus** (só se o jogador participou da morte): chance de 1% por level do mob (máx. 50%). Raridade pela faixa de level: comum (<15), incomum (15–34, item brilha) e raro (35+, item brilha + som). Tabelas editáveis em `data/leveledworld/loot_table/bonus/{common,uncommon,rare}.json`.
+- Tudo configurável na seção `[rewards]` de `leveledworld-server.toml`.
+
+### Correções
+- XP de skill por dano agora é limitado à vida máxima da vítima (um golpe gigante não rende XP absurdo).
+
 ## 0.3.1
 - **Corrige crash** ao renderizar um mob escalado (`IllegalStateException: Not building!`): a barra de vida era escrita num buffer de vértices já encerrado pelo desenho do texto.
 - **Corrige a placa dos mobs**: o fundo estava sendo desenhado na frente do texto (profundidade com sinal invertido), escondendo o nome. Agora fundo e barra ficam atrás do texto.

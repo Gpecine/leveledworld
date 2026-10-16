@@ -12,8 +12,25 @@ public final class ClientRpgData {
         return current;
     }
 
+    private static volatile long levelUpAt;
+    private static volatile int levelUpLevel;
+
     static void set(SyncRpgDataPayload data) {
+        SyncRpgDataPayload previous = current;
+        if (previous != null && data.level() > previous.level()) {
+            levelUpAt = System.currentTimeMillis();
+            levelUpLevel = data.level();
+        }
         current = data;
+    }
+
+    /** Momento (ms) do último level up visto pelo cliente; 0 se nenhum. */
+    public static long levelUpAt() {
+        return levelUpAt;
+    }
+
+    public static int levelUpLevel() {
+        return levelUpLevel;
     }
 
     public static ResourcesPayload resources() {
@@ -27,6 +44,7 @@ public final class ClientRpgData {
     public static void clear() {
         current = null;
         resources = null;
+        levelUpAt = 0;
     }
 
     private ClientRpgData() {}

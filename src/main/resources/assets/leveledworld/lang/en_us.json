@@ -28,5 +28,7 @@
   "attribute.leveledworld.stamina": "Stamina",
   "attribute.leveledworld.stamina.desc": "+10 max stamina per point. Sprinting, jumping and attacking use stamina.",
   "attribute.leveledworld.magicka": "Magicka",
-  "attribute.leveledworld.magicka.desc": "+10 max magicka per point. Will power the upcoming spell system."
+  "attribute.leveledworld.magicka.desc": "+10 max magicka per point. Will power the upcoming spell system.",
+  "hud.leveledworld.level_up": "LEVEL UP!",
+  "hud.leveledworld.level_up_sub": "Level %s  •  press K to spend points"
 }

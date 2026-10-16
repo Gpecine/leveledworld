@@ -27,7 +27,7 @@ import org.joml.Matrix4f;
 public final class MobNameplateRenderer {
     private static final float SCALE = 0.025F;
     private static final int BAR_WIDTH = 40;
-    private static final int BAR_HEIGHT = 3;
+    private static final int BAR_HEIGHT = 4;
 
     @SubscribeEvent
     public static void onRenderLiving(RenderLivingEvent.Post<?, ?> event) {
@@ -43,10 +43,9 @@ public final class MobNameplateRenderer {
         if (!mc.player.hasLineOfSight(entity)) return;
 
         int mobLevel = entity.getData(RpgAttachments.MOB_LEVEL);
-        Component text = Component.empty()
-                .append(entity.getType().getDescription())
-                .append(" ")
-                .append(Component.translatable("nameplate.leveledworld.level", mobLevel));
+        Difficulty diff = difficulty(mobLevel);
+        Component levelText = Component.literal(diff == Difficulty.DEADLY ? "\u2620 " + mobLevel : String.valueOf(mobLevel));
+        Component name = entity.getType().getDescription();
 
         PoseStack pose = event.getPoseStack();
         MultiBufferSource buffers = event.getMultiBufferSource();
@@ -54,61 +53,96 @@ public final class MobNameplateRenderer {
 
         pose.pushPose();
         // Sobe um pouco mais se o mob tiver nome customizado visível, para não sobrepor a placa vanilla.
-        double yOffset = entity.getBbHeight() + 0.5 + (entity.shouldShowName() ? 0.3 : 0.0);
+        double yOffset = entity.getBbHeight() + 0.55 + (entity.shouldShowName() ? 0.3 : 0.0);
         pose.translate(0.0, yOffset, 0.0);
         pose.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
         pose.scale(SCALE, -SCALE, SCALE);
-        Matrix4f matrix = pose.last().pose();
+        Matrix4f m = pose.last().pose();
 
         Font font = mc.font;
-        int textWidth = font.width(text);
         boolean showBar = LWClientConfig.SHOW_HEALTH_BAR.get();
+        int badgeW = font.width(levelText) + 6;
+        int nameW = font.width(name);
+        int contentW = Math.max(badgeW + 3 + nameW, showBar ? BAR_WIDTH : 0);
+        float l = -contentW / 2f;
+        float r = contentW / 2f;
+        float top = -13;
+        float bottom = showBar ? BAR_HEIGHT + 2 : -1;
+
+        // Neste espaço z negativo = mais longe da câmera: fundo e barra ficam atrás do texto (z = 0).
         VertexConsumer vc = buffers.getBuffer(RenderType.textBackground());
+        quad(vc, m, l - 3, top - 2, r + 3, bottom + 2, -5f, 0xB0100E16, 0xB0100E16, light);
+        // moldura dourada fina
+        quad(vc, m, l - 4, top - 3, r + 4, top - 2, -5f, GOLD, GOLD, light);
+        quad(vc, m, l - 4, bottom + 2, r + 4, bottom + 3, -5f, GOLD_DARK, GOLD_DARK, light);
+        quad(vc, m, l - 4, top - 2, l - 3, bottom + 2, -5f, GOLD, GOLD_DARK, light);
+        quad(vc, m, r + 3, top - 2, r + 4, bottom + 2, -5f, GOLD, GOLD_DARK, light);
+        // medalhão do level na cor da dificuldade
+        float bx = l;
+        quad(vc, m, bx, top, bx + badgeW, top + 11, -3f, diff.top, diff.bottom, light);
 
-        // Fundo próprio, bem atrás do texto (neste espaço, z negativo = mais longe da câmera). O fundo embutido da
-        // Font fica a 0.01 unidade das letras e entra em z-fighting à distância, "apagando" parte do nome.
-        float panelHalf = Math.max(textWidth, BAR_WIDTH) / 2f + 2;
-        float panelBottom = showBar ? BAR_HEIGHT + 1 : -1;
-        quad(vc, matrix, -panelHalf, -11, panelHalf, panelBottom, -3f, 0x60000000, light);
-
-        font.drawInBatch(text, -textWidth / 2f, -10, levelColor(mobLevel), false, matrix, buffers,
-                Font.DisplayMode.NORMAL, 0, light);
+        float textY = top + 2;
+        font.drawInBatch(levelText, bx + 3, textY, 0xFF140E06, false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
+        font.drawInBatch(name, bx + badgeW + 3, textY, 0xFFF0EADA, false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
 
         if (showBar) {
             // Pegar o buffer de novo: o drawInBatch acima pediu o buffer de texto, o que encerra o batch
             // compartilhado anterior. Escrever no VertexConsumer antigo causa "Not building!" (crash).
             vc = buffers.getBuffer(RenderType.textBackground());
             float health = Mth.clamp(entity.getHealth() / entity.getMaxHealth(), 0f, 1f);
-            float left = -BAR_WIDTH / 2f;
-            quad(vc, matrix, left, 0, left + BAR_WIDTH, BAR_HEIGHT, -2f, 0xFF202020, light);
-            quad(vc, matrix, left, 0, left + BAR_WIDTH * health, BAR_HEIGHT, -1f, healthColor(health), light);
+            float bl = -BAR_WIDTH / 2f;
+            float br = bl + BAR_WIDTH;
+            float fill = bl + BAR_WIDTH * health;
+            int[] grad = healthGradient(health);
+            quad(vc, m, bl - 1, 0, br + 1, BAR_HEIGHT + 1, -3f, 0xFF000000, 0xFF000000, light);
+            quad(vc, m, bl, 1, br, BAR_HEIGHT, -2.5f, 0xFF1C1A24, 0xFF2A2734, light);
+            quad(vc, m, bl, 1, fill, BAR_HEIGHT, -2f, grad[0], grad[1], light);
+            quad(vc, m, bl, 1, fill, 1.6f, -1.5f, 0x60FFFFFF, 0x60FFFFFF, light);
         }
         pose.popPose();
     }
 
-    /** Cor do texto conforme a diferença entre o level do mob e o do jogador (estilo MMO). */
-    private static int levelColor(int mobLevel) {
-        SyncRpgDataPayload data = ClientRpgData.get();
-        int diff = mobLevel - (data != null ? data.level() : 1);
-        if (diff >= 5) return 0xFFFF5555;   // bem mais forte
-        if (diff >= 2) return 0xFFFFAA00;   // mais forte
-        if (diff >= -2) return 0xFFFFFFFF;  // equivalente
-        if (diff >= -5) return 0xFF55FF55;  // mais fraco
-        return 0xFFAAAAAA;                  // muito mais fraco
+    private static final int GOLD = 0xFFC9A44C;
+    private static final int GOLD_DARK = 0xFF5E4A20;
+
+    /** Dificuldade pela diferença entre o level do mob e o do jogador (estilo MMO). */
+    private enum Difficulty {
+        TRIVIAL(0xFFC8C8C8, 0xFF707070),
+        EASY(0xFF9BF08A, 0xFF2E9A3A),
+        EVEN(0xFFF8E7A8, 0xFFC9A44C),
+        HARD(0xFFFFC870, 0xFFD06A10),
+        DEADLY(0xFFFF8A80, 0xFFB01822);
+
+        final int top, bottom;
+
+        Difficulty(int top, int bottom) {
+            this.top = top;
+            this.bottom = bottom;
+        }
     }
 
-    private static int healthColor(float fraction) {
-        int r = (int) (Mth.clamp(2f * (1f - fraction), 0f, 1f) * 255);
-        int g = (int) (Mth.clamp(2f * fraction, 0f, 1f) * 255);
-        return 0xFF000000 | (r << 16) | (g << 8) | 0x20;
+    private static Difficulty difficulty(int mobLevel) {
+        SyncRpgDataPayload data = ClientRpgData.get();
+        int diff = mobLevel - (data != null ? data.level() : 1);
+        if (diff >= 5) return Difficulty.DEADLY;
+        if (diff >= 2) return Difficulty.HARD;
+        if (diff >= -2) return Difficulty.EVEN;
+        if (diff >= -5) return Difficulty.EASY;
+        return Difficulty.TRIVIAL;
+    }
+
+    private static int[] healthGradient(float fraction) {
+        if (fraction > 0.5f) return new int[]{0xFF8BE88A, 0xFF23803A};
+        if (fraction > 0.25f) return new int[]{0xFFFFE07A, 0xFFC08A10};
+        return new int[]{0xFFFF7A6E, 0xFFA8141E};
     }
 
     private static void quad(VertexConsumer vc, Matrix4f m, float x1, float y1, float x2, float y2,
-                             float z, int argb, int light) {
-        vc.addVertex(m, x1, y1, z).setColor(argb).setLight(light);
-        vc.addVertex(m, x1, y2, z).setColor(argb).setLight(light);
-        vc.addVertex(m, x2, y2, z).setColor(argb).setLight(light);
-        vc.addVertex(m, x2, y1, z).setColor(argb).setLight(light);
+                             float z, int topColor, int bottomColor, int light) {
+        vc.addVertex(m, x1, y1, z).setColor(topColor).setLight(light);
+        vc.addVertex(m, x1, y2, z).setColor(bottomColor).setLight(light);
+        vc.addVertex(m, x2, y2, z).setColor(bottomColor).setLight(light);
+        vc.addVertex(m, x2, y1, z).setColor(topColor).setLight(light);
     }
 
     private MobNameplateRenderer() {}
