@@ -18,5 +18,6 @@
   "skill.leveledworld.armor": "Armor",
   "skill.leveledworld.mining": "Mining",
   "skill.leveledworld.woodcutting": "Woodcutting",
-  "skill.leveledworld.smithing": "Smithing"
+  "skill.leveledworld.smithing": "Smithing",
+  "nameplate.leveledworld.level": "Lv. %s"
 }

@@ -1,5 +1,6 @@
 package com.leveledworld;
 
+import com.leveledworld.config.LWClientConfig;
 import com.leveledworld.config.LWConfig;
 import com.leveledworld.network.RpgNetwork;
 import com.leveledworld.player.RpgAttachments;
@@ -20,6 +21,7 @@ public class LeveledWorld {
         RpgAttachments.ATTACHMENT_TYPES.register(modBus);
         modBus.addListener(RpgNetwork::register);
         container.registerConfig(ModConfig.Type.SERVER, LWConfig.SPEC);
+        container.registerConfig(ModConfig.Type.CLIENT, LWClientConfig.SPEC);
     }
 
     public static ResourceLocation id(String path) {

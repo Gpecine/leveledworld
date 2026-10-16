@@ -39,6 +39,9 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 ### Interface
 - **HUD**: `Lv. X` + barra de XP no canto superior esquerdo.
 - **Tecla `K`**: tela de status com level e todas as skills.
+- **Placa nos mobs**: `Nome Lv. X` + barra de vida acima da cabeça. A cor do level indica a dificuldade
+  em relação a você: cinza (muito mais fraco), verde, branco (equivalente), laranja, vermelho (muito mais forte).
+  Configurável em `config/leveledworld-client.toml` (ligar/desligar, distância, barra de vida).
 
 ### Comandos
 | Comando | Permissão |
@@ -53,10 +56,14 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 `config/leveledworld-server.toml` (pode ser sobrescrito por mundo em `saves/<mundo>/serverconfig/`) — multiplicador de XP, levels máximos,
 raio de busca, faixa de level dos mobs (min/max factor) e bônus de atributos por level.
 
+## Download
+Os jars de todas as versões ficam em [`releases/`](releases/) e na aba **Releases** do GitHub.
+Histórico de mudanças: [CHANGELOG.md](CHANGELOG.md).
+
 ## Build e teste
 Requer Java 21.
 ```bash
-./gradlew build        # gera build/libs/leveledworld-0.1.0.jar
+./gradlew build        # gera build/libs/leveledworld-<versão>.jar
 ./gradlew runClient    # abre o Minecraft com o mod
 ```
 
@@ -68,6 +75,10 @@ Roteiro de teste rápido:
 
 ## Próximos passos (ideias)
 - Atributos ao subir de level (Vida / Stamina / Mana) e perks por skill.
-- Nome + level + barra de vida sobre os mobs.
 - Loot e XP escalados pelo level do mob.
 - Bônus de dificuldade por dimensão (Nether/End).
+
+## Publicar uma nova versão
+1. Altere `mod_version` em `gradle.properties` e adicione a seção no `CHANGELOG.md`.
+2. Copie o jar gerado para `releases/`.
+3. Crie e envie a tag: `git tag v0.X.0 && git push origin v0.X.0` — o GitHub Actions cria a Release com o jar.

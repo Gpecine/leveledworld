@@ -18,5 +18,6 @@
   "skill.leveledworld.armor": "Armadura",
   "skill.leveledworld.mining": "Mineração",
   "skill.leveledworld.woodcutting": "Lenhador",
-  "skill.leveledworld.smithing": "Ferraria"
+  "skill.leveledworld.smithing": "Ferraria",
+  "nameplate.leveledworld.level": "Lv. %s"
 }
