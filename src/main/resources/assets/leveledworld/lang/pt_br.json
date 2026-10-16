@@ -1,0 +1,22 @@
+{
+  "key.categories.leveledworld": "Leveled World",
+  "key.leveledworld.status": "Abrir status do personagem",
+  "hud.leveledworld.level": "Lv. %s",
+  "screen.leveledworld.status": "Status do Personagem",
+  "screen.leveledworld.character_level": "Level %s",
+  "screen.leveledworld.skills": "Skills",
+  "screen.leveledworld.max": "MÁXIMO",
+  "screen.leveledworld.no_data": "Aguardando dados do servidor...",
+  "message.leveledworld.level_up": "Você subiu para o level %s!",
+  "message.leveledworld.skill_up": "%s aumentou para %s",
+  "command.leveledworld.info": "%s — Level %s (%s/%s XP)",
+  "command.leveledworld.mob": "%s tem level %s",
+  "command.leveledworld.unknown_skill": "Skill desconhecida: %s",
+  "skill.leveledworld.one_handed": "Combate",
+  "skill.leveledworld.archery": "Arquearia",
+  "skill.leveledworld.block": "Bloqueio",
+  "skill.leveledworld.armor": "Armadura",
+  "skill.leveledworld.mining": "Mineração",
+  "skill.leveledworld.woodcutting": "Lenhador",
+  "skill.leveledworld.smithing": "Ferraria"
+}
