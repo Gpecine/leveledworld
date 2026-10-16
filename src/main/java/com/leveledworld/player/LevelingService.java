@@ -57,6 +57,7 @@ public final class LevelingService {
         while (data.level() < max && xp >= characterXpToNext(data.level())) {
             xp -= characterXpToNext(data.level());
             data.setLevel(data.level() + 1);
+            data.setUnspentPoints(data.unspentPoints() + LWConfig.POINTS_PER_LEVEL.get());
             onCharacterLevelUp(player, data.level());
         }
         data.setXp(data.level() >= max ? 0 : xp);
@@ -68,6 +69,12 @@ public final class LevelingService {
         PlayerRpgData data = get(player);
         data.setLevel(Math.max(1, Math.min(level, LWConfig.MAX_PLAYER_LEVEL.get())));
         data.setXp(0);
+        // Pontos disponíveis = pontos que o level dá menos os já gastos. Se baixou o level, devolve tudo.
+        int earned = (data.level() - 1) * LWConfig.POINTS_PER_LEVEL.get();
+        if (data.spentPoints() > earned) {
+            AttributeService.resetPoints(player);
+        }
+        data.setUnspentPoints(Math.max(0, earned - data.spentPoints()));
         RpgNetwork.sync(player);
     }
 
@@ -86,6 +93,8 @@ public final class LevelingService {
     private static void onCharacterLevelUp(ServerPlayer player, int newLevel) {
         player.sendSystemMessage(Component.translatable("message.leveledworld.level_up", newLevel)
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        player.sendSystemMessage(Component.translatable("message.leveledworld.points_available")
+                .withStyle(ChatFormatting.YELLOW));
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 0.8F);
     }

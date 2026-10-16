@@ -24,6 +24,15 @@ o personagem evolui usando skills, e **o mundo inteiro escala com o seu level** 
 - XP para o próximo level do personagem: `(level + 3) × 25`.
 - Persiste ao morrer.
 
+### Atributos (Vida / Stamina / Mana)
+Cada level do personagem dá **1 ponto** para investir na tela **K**:
+
+| Atributo | Por ponto | Uso |
+|---|---|---|
+| Vida | +1 coração | vida máxima |
+| Stamina | +10 (base 100) | correr (10/s), pular (4) e atacar (3); regenera 15/s após 1s. Sem stamina, não dá para correr |
+| Mana | +10 (base 100) | regenera 3/s; será usada pelo sistema de magias |
+
 ### Mundo escalado
 Todo mob hostil, ao surgir, recebe um level baseado no **jogador mais próximo** (raio 128):
 
@@ -37,8 +46,8 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 - Sem jogador por perto, usa a média de level dos jogadores da dimensão (ou 1 se não houver ninguém).
 
 ### Interface
-- **HUD**: `Lv. X` + barra de XP no canto superior esquerdo.
-- **Tecla `K`**: tela de status com level e todas as skills.
+- **HUD**: `Lv. X` (+ pontos livres), barra de XP (dourada), stamina (verde) e mana (azul) no canto superior esquerdo.
+- **Tecla `K`**: tela de status com level, atributos (botões "+" para gastar pontos) e todas as skills.
 - **Placa nos mobs**: `Nome Lv. X` + barra de vida acima da cabeça. A cor do level indica a dificuldade
   em relação a você: cinza (muito mais fraco), verde, branco (equivalente), laranja, vermelho (muito mais forte).
   Configurável em `config/leveledworld-client.toml` (ligar/desligar, distância, barra de vida).
@@ -50,6 +59,7 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 | `/rpg level set <jogador> <level>` | OP |
 | `/rpg skill set <jogador> <skill> <level>` | OP |
 | `/rpg skill addxp <jogador> <skill> <xp>` | OP |
+| `/rpg points add <jogador> <n>` / `/rpg points reset <jogador>` | OP |
 | `/rpg mob <entidade>` — mostra o level de um mob | OP |
 
 ## Configuração
@@ -74,7 +84,7 @@ Roteiro de teste rápido:
 4. Morrer e relogar → level e skills mantidos.
 
 ## Próximos passos (ideias)
-- Atributos ao subir de level (Vida / Stamina / Mana) e perks por skill.
+- Perks por skill e sistema de magias usando a mana.
 - Loot e XP escalados pelo level do mob.
 - Bônus de dificuldade por dimensão (Nether/End).
 

@@ -19,5 +19,14 @@
   "skill.leveledworld.mining": "Mineração",
   "skill.leveledworld.woodcutting": "Lenhador",
   "skill.leveledworld.smithing": "Ferraria",
-  "nameplate.leveledworld.level": "Lv. %s"
+  "nameplate.leveledworld.level": "Lv. %s",
+  "screen.leveledworld.points": "Pontos de atributo: %s",
+  "message.leveledworld.points_available": "Você tem pontos de atributo para gastar! Aperte K.",
+  "command.leveledworld.points": "  Pontos livres: %s | Vida: %s | Stamina: %s | Mana: %s",
+  "attribute.leveledworld.health": "Vida",
+  "attribute.leveledworld.health.desc": "+1 coração de vida máxima por ponto.",
+  "attribute.leveledworld.stamina": "Stamina",
+  "attribute.leveledworld.stamina.desc": "+10 de stamina máxima por ponto. Correr, pular e atacar gastam stamina.",
+  "attribute.leveledworld.magicka": "Mana",
+  "attribute.leveledworld.magicka.desc": "+10 de mana máxima por ponto. Será usada pelo sistema de magias."
 }

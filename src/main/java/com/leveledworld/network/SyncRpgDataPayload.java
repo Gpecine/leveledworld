@@ -12,7 +12,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
  * xpToNext = 0 significa level máximo.
  */
 public record SyncRpgDataPayload(int level, float xp, float xpToNext,
-                                 int[] skillLevels, float[] skillXp, float[] skillXpToNext) implements CustomPacketPayload {
+                                 int[] skillLevels, float[] skillXp, float[] skillXpToNext,
+                                 int unspentPoints, int[] attributePoints) implements CustomPacketPayload {
 
     public static final Type<SyncRpgDataPayload> TYPE = new Type<>(LeveledWorld.id("sync_rpg_data"));
 
@@ -29,6 +30,8 @@ public record SyncRpgDataPayload(int level, float xp, float xpToNext,
             buf.writeFloat(skillXp[i]);
             buf.writeFloat(skillXpToNext[i]);
         }
+        buf.writeVarInt(unspentPoints);
+        buf.writeVarIntArray(attributePoints);
     }
 
     private static SyncRpgDataPayload read(FriendlyByteBuf buf) {
@@ -49,7 +52,9 @@ public record SyncRpgDataPayload(int level, float xp, float xpToNext,
                 toNext[i] = t;
             }
         }
-        return new SyncRpgDataPayload(level, xp, xpToNext, levels, xps, toNext);
+        int unspent = buf.readVarInt();
+        int[] attributes = buf.readVarIntArray();
+        return new SyncRpgDataPayload(level, xp, xpToNext, levels, xps, toNext, unspent, attributes);
     }
 
     @Override

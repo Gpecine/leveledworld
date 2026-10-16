@@ -2,8 +2,11 @@ package com.leveledworld.command;
 
 import com.leveledworld.LeveledWorld;
 import com.leveledworld.mob.MobScaling;
+import com.leveledworld.network.RpgNetwork;
+import com.leveledworld.player.AttributeService;
 import com.leveledworld.player.LevelingService;
 import com.leveledworld.player.PlayerRpgData;
+import com.leveledworld.player.RpgAttribute;
 import com.leveledworld.skill.Skill;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -31,6 +34,8 @@ import java.util.Arrays;
  * /rpg level set <jogador> <level>
  * /rpg skill set <jogador> <skill> <level>
  * /rpg skill addxp <jogador> <skill> <xp>
+ * /rpg points add <jogador> <quantidade>
+ * /rpg points reset <jogador>
  * /rpg mob <entidade>
  */
 @EventBusSubscriber(modid = LeveledWorld.MODID)
@@ -77,6 +82,24 @@ public final class RpgCommand {
                                                             LevelingService.addSkillXp(p, getSkill(c), DoubleArgumentType.getDouble(c, "xp"));
                                                             return info(c, p);
                                                         }))))))
+                .then(Commands.literal("points").requires(s -> s.hasPermission(2))
+                        .then(Commands.literal("add")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                                .executes(c -> {
+                                                    ServerPlayer p = EntityArgument.getPlayer(c, "player");
+                                                    PlayerRpgData data = LevelingService.get(p);
+                                                    data.setUnspentPoints(data.unspentPoints() + IntegerArgumentType.getInteger(c, "amount"));
+                                                    RpgNetwork.sync(p);
+                                                    return info(c, p);
+                                                }))))
+                        .then(Commands.literal("reset")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(c -> {
+                                            ServerPlayer p = EntityArgument.getPlayer(c, "player");
+                                            AttributeService.resetPoints(p);
+                                            return info(c, p);
+                                        }))))
                 .then(Commands.literal("mob").requires(s -> s.hasPermission(2))
                         .then(Commands.argument("target", EntityArgument.entity())
                                 .executes(c -> {
@@ -105,6 +128,8 @@ public final class RpgCommand {
         CommandSourceStack src = c.getSource();
         src.sendSuccess(() -> Component.translatable("command.leveledworld.info", p.getDisplayName(), data.level(),
                 (int) data.xp(), (int) LevelingService.characterXpToNext(data.level())), false);
+        src.sendSuccess(() -> Component.translatable("command.leveledworld.points", data.unspentPoints(),
+                data.points(RpgAttribute.HEALTH), data.points(RpgAttribute.STAMINA), data.points(RpgAttribute.MAGICKA)), false);
         for (Skill s : Skill.values()) {
             var sp = data.skill(s);
             src.sendSuccess(() -> Component.literal("  ").append(Component.translatable(s.translationKey()))

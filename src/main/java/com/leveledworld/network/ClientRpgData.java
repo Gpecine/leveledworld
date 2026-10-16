@@ -6,6 +6,7 @@ package com.leveledworld.network;
  */
 public final class ClientRpgData {
     private static volatile SyncRpgDataPayload current;
+    private static volatile ResourcesPayload resources;
 
     public static SyncRpgDataPayload get() {
         return current;
@@ -15,8 +16,17 @@ public final class ClientRpgData {
         current = data;
     }
 
+    public static ResourcesPayload resources() {
+        return resources;
+    }
+
+    static void setResources(ResourcesPayload data) {
+        resources = data;
+    }
+
     public static void clear() {
         current = null;
+        resources = null;
     }
 
     private ClientRpgData() {}

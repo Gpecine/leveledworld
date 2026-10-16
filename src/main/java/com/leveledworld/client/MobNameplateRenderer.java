@@ -61,16 +61,24 @@ public final class MobNameplateRenderer {
         Matrix4f matrix = pose.last().pose();
 
         Font font = mc.font;
-        float textX = -font.width(text) / 2f;
-        font.drawInBatch(text, textX, -10, levelColor(mobLevel), false, matrix, buffers,
-                Font.DisplayMode.NORMAL, 0x40000000, light);
+        int textWidth = font.width(text);
+        boolean showBar = LWClientConfig.SHOW_HEALTH_BAR.get();
+        VertexConsumer vc = buffers.getBuffer(RenderType.textBackground());
 
-        if (LWClientConfig.SHOW_HEALTH_BAR.get()) {
+        // Fundo próprio, bem atrás do texto (z positivo = mais longe da câmera). O fundo embutido da Font fica a
+        // 0.01 unidade das letras e entra em z-fighting à distância, "apagando" parte do nome.
+        float panelHalf = Math.max(textWidth, BAR_WIDTH) / 2f + 2;
+        float panelBottom = showBar ? BAR_HEIGHT + 1 : -1;
+        quad(vc, matrix, -panelHalf, -11, panelHalf, panelBottom, 3f, 0x60000000, light);
+
+        font.drawInBatch(text, -textWidth / 2f, -10, levelColor(mobLevel), false, matrix, buffers,
+                Font.DisplayMode.NORMAL, 0, light);
+
+        if (showBar) {
             float health = Mth.clamp(entity.getHealth() / entity.getMaxHealth(), 0f, 1f);
-            VertexConsumer vc = buffers.getBuffer(RenderType.textBackground());
             float left = -BAR_WIDTH / 2f;
-            quad(vc, matrix, left - 1, -1, left + BAR_WIDTH + 1, BAR_HEIGHT + 1, 0.02f, 0xC0000000, light);
-            quad(vc, matrix, left, 0, left + BAR_WIDTH * health, BAR_HEIGHT, 0.01f, healthColor(health), light);
+            quad(vc, matrix, left, 0, left + BAR_WIDTH, BAR_HEIGHT, 2f, 0xFF202020, light);
+            quad(vc, matrix, left, 0, left + BAR_WIDTH * health, BAR_HEIGHT, 1f, healthColor(health), light);
         }
         pose.popPose();
     }

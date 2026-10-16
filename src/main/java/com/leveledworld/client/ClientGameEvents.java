@@ -2,6 +2,7 @@ package com.leveledworld.client;
 
 import com.leveledworld.LeveledWorld;
 import com.leveledworld.network.ClientRpgData;
+import com.leveledworld.network.ResourcesPayload;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -15,6 +16,12 @@ public final class ClientGameEvents {
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
+        // Sem stamina não dá para correr (o servidor desconta, o cliente impede de continuar correndo).
+        ResourcesPayload res = ClientRpgData.resources();
+        if (mc.player != null && res != null && res.stamina() < 1f && mc.player.isSprinting()
+                && !mc.player.isCreative() && !mc.player.isSpectator()) {
+            mc.player.setSprinting(false);
+        }
         while (ClientSetup.OPEN_STATUS.consumeClick()) {
             if (mc.player != null && mc.screen == null) {
                 mc.setScreen(new StatusScreen());

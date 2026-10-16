@@ -12,6 +12,20 @@ public final class LWConfig {
     public static final ModConfigSpec.IntValue SKILL_MAX_LEVEL;
     public static final ModConfigSpec.IntValue MAX_PLAYER_LEVEL;
 
+    // Atributos
+    public static final ModConfigSpec.IntValue POINTS_PER_LEVEL;
+    public static final ModConfigSpec.DoubleValue HEALTH_PER_POINT;
+    public static final ModConfigSpec.DoubleValue BASE_STAMINA;
+    public static final ModConfigSpec.DoubleValue STAMINA_PER_POINT;
+    public static final ModConfigSpec.DoubleValue BASE_MAGICKA;
+    public static final ModConfigSpec.DoubleValue MAGICKA_PER_POINT;
+    public static final ModConfigSpec.DoubleValue SPRINT_STAMINA_PER_SECOND;
+    public static final ModConfigSpec.DoubleValue JUMP_STAMINA_COST;
+    public static final ModConfigSpec.DoubleValue ATTACK_STAMINA_COST;
+    public static final ModConfigSpec.DoubleValue STAMINA_REGEN_PER_SECOND;
+    public static final ModConfigSpec.IntValue STAMINA_REGEN_DELAY_TICKS;
+    public static final ModConfigSpec.DoubleValue MAGICKA_REGEN_PER_SECOND;
+
     // Escala de mobs
     public static final ModConfigSpec.BooleanValue SCALE_MOBS;
     public static final ModConfigSpec.IntValue PLAYER_SEARCH_RADIUS;
@@ -35,6 +49,33 @@ public final class LWConfig {
                 .defineInRange("skillMaxLevel", 100, 1, 1000);
         MAX_PLAYER_LEVEL = b.comment("Level máximo do personagem.")
                 .defineInRange("maxPlayerLevel", 100, 1, 1000);
+        b.pop();
+
+        b.push("attributes");
+        POINTS_PER_LEVEL = b.comment("Pontos de atributo ganhos a cada level do personagem.")
+                .defineInRange("pointsPerLevel", 1, 0, 100);
+        HEALTH_PER_POINT = b.comment("Vida máxima ganha por ponto em Vida (2 = 1 coração).")
+                .defineInRange("healthPerPoint", 2.0, 0.0, 100.0);
+        BASE_STAMINA = b.comment("Stamina máxima sem pontos.")
+                .defineInRange("baseStamina", 100.0, 1.0, 10000.0);
+        STAMINA_PER_POINT = b.comment("Stamina máxima ganha por ponto em Stamina.")
+                .defineInRange("staminaPerPoint", 10.0, 0.0, 1000.0);
+        BASE_MAGICKA = b.comment("Mana máxima sem pontos.")
+                .defineInRange("baseMagicka", 100.0, 1.0, 10000.0);
+        MAGICKA_PER_POINT = b.comment("Mana máxima ganha por ponto em Mana.")
+                .defineInRange("magickaPerPoint", 10.0, 0.0, 1000.0);
+        SPRINT_STAMINA_PER_SECOND = b.comment("Stamina gasta por segundo correndo. Sem stamina não dá para correr.")
+                .defineInRange("sprintCostPerSecond", 10.0, 0.0, 1000.0);
+        JUMP_STAMINA_COST = b.comment("Stamina gasta por pulo.")
+                .defineInRange("jumpCost", 4.0, 0.0, 1000.0);
+        ATTACK_STAMINA_COST = b.comment("Stamina gasta por ataque corpo-a-corpo.")
+                .defineInRange("attackCost", 3.0, 0.0, 1000.0);
+        STAMINA_REGEN_PER_SECOND = b.comment("Stamina recuperada por segundo.")
+                .defineInRange("staminaRegenPerSecond", 15.0, 0.0, 1000.0);
+        STAMINA_REGEN_DELAY_TICKS = b.comment("Ticks sem gastar stamina antes de começar a recuperar (20 = 1s).")
+                .defineInRange("staminaRegenDelay", 20, 0, 1200);
+        MAGICKA_REGEN_PER_SECOND = b.comment("Mana recuperada por segundo.")
+                .defineInRange("magickaRegenPerSecond", 3.0, 0.0, 1000.0);
         b.pop();
 
         b.push("mobScaling");

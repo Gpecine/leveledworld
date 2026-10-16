@@ -19,5 +19,14 @@
   "skill.leveledworld.mining": "Mining",
   "skill.leveledworld.woodcutting": "Woodcutting",
   "skill.leveledworld.smithing": "Smithing",
-  "nameplate.leveledworld.level": "Lv. %s"
+  "nameplate.leveledworld.level": "Lv. %s",
+  "screen.leveledworld.points": "Attribute points: %s",
+  "message.leveledworld.points_available": "You have attribute points to spend! Press K.",
+  "command.leveledworld.points": "  Unspent: %s | Health: %s | Stamina: %s | Magicka: %s",
+  "attribute.leveledworld.health": "Health",
+  "attribute.leveledworld.health.desc": "+1 heart of max health per point.",
+  "attribute.leveledworld.stamina": "Stamina",
+  "attribute.leveledworld.stamina.desc": "+10 max stamina per point. Sprinting, jumping and attacking use stamina.",
+  "attribute.leveledworld.magicka": "Magicka",
+  "attribute.leveledworld.magicka.desc": "+10 max magicka per point. Will power the upcoming spell system."
 }
