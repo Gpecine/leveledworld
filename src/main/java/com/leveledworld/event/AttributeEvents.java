@@ -4,10 +4,13 @@ import com.leveledworld.LeveledWorld;
 import com.leveledworld.config.LWConfig;
 import com.leveledworld.player.AttributeService;
 import com.leveledworld.player.PerkService;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingEvent;
+import net.neoforged.neoforge.event.entity.player.ArrowLooseEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -31,10 +34,29 @@ public final class AttributeEvents {
         }
     }
 
+    /** Exausto não ataca; cada ataque gasta stamina (mais com armas de duas mãos). */
     @SubscribeEvent
     public static void onAttack(AttackEntityEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
+            if (AttributeService.isExhausted(player)) {
+                event.setCanceled(true);
+                player.displayClientMessage(Component.translatable("message.leveledworld.exhausted")
+                        .withStyle(ChatFormatting.RED), true);
+                return;
+            }
             AttributeService.useStamina(player, AttributeService.attackCost(player));
+        }
+    }
+
+    /** Disparar com arco gasta stamina; exausto, o disparo sai fraco. */
+    @SubscribeEvent
+    public static void onArrowLoose(ArrowLooseEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player && event.hasAmmo()) {
+            if (AttributeService.isExhausted(player)) {
+                event.setCharge(event.getCharge() / 2);
+                return;
+            }
+            AttributeService.useStamina(player, LWConfig.BOW_STAMINA_COST.get());
         }
     }
 

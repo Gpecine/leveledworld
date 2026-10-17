@@ -2,6 +2,41 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.8.1
+### Árvores de perks com a silhueta da skill
+- As 15 estrelas de cada árvore agora desenham o símbolo da skill, e as linhas entre elas são os requisitos:
+
+| Skill | Silhueta |
+|---|---|
+| Uma Mão | espada (pomo → empunhadura → guarda → lâmina → ponta) |
+| Duas Mãos | machadão de lâmina dupla |
+| Arquearia | arco tensionado com flecha |
+| Bloqueio | escudo com cruz |
+| Armadura Pesada | peitoral |
+| Armadura Leve | pena |
+| Furtividade | olho |
+| Atletismo | corredor |
+| Mineração | picareta |
+| Lenhador | pinheiro |
+| Ferraria | bigorna |
+| Agricultura | espiga de trigo |
+
+- As constelações laterais do carrossel usam o mesmo desenho.
+- Alguns requisitos e níveis mudaram para seguir o desenho, sempre subindo de nível ao longo de cada caminho.
+  Os perks já comprados continuam comprados.
+
+### Vida
+- Cada ponto em Vida dá **½ coração** (1 coração a cada 2 pontos), em vez de 2 corações.
+
+### Stamina
+- **Exaustão**: se a stamina acabar, o personagem fica exausto e a barra fica vermelha. Ele não corre nem ataca,
+  e o arco dispara fraco, até recuperar 30% da stamina.
+- Ações gastam mais: correr 12/s (antes 10), pular 5 (antes 4), atacar 8 (antes 3; ×1,5 com armas de duas mãos)
+  e atirar com arco 6 (antes não gastava).
+- Cada ponto em Stamina acelera a recuperação em +5% (20 pontos = o dobro). A base é 12/s.
+- As opções de stamina foram para uma seção própria, `[stamina]`, na config do servidor. A vida usa a chave nova
+  `maxHealthPerPoint`. Configs antigas recebem os valores novos automaticamente.
+
 ## 0.8.0 — Skills 2.0
 ### 12 skills
 - **Combate** virou **Uma Mão** (espadas) e **Duas Mãos** (machados, maça, tridente).

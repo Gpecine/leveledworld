@@ -96,6 +96,9 @@ public class StatusScreen extends Screen {
     private float carouselY() { return panelY() * 0.42f; }
     /** Raio da árvore de perks da skill selecionada. */
     private float treeRadius() { return Math.min(panelY() * 0.30f, width * 0.2f); }
+    /** Escala e deslocamento vertical (em raios) das silhuetas, para não encostarem no nome da skill. */
+    private static final float SHAPE_SCALE = 0.92f;
+    private static final float SHAPE_LIFT = 0.05f;
     /** Raio dos símbolos das constelações laterais. */
     private float sideRadius() { return Math.min(panelY() * 0.17f, width * 0.11f); }
 
@@ -250,26 +253,29 @@ public class StatusScreen extends Screen {
         return hovered;
     }
 
-    /** Símbolo decorativo da skill (espada, arco, escudo…). */
+    /** Silhueta da skill (espada, machadão, arco…) formada pelas estrelas da árvore, sem estado dos perks. */
     private void drawSymbol(GuiGraphics g, Skill skill, float cx, float cy, float r, float alpha, boolean faint) {
-        Constellations.Shape shape = Constellations.of(skill);
-        float[][] pts = new float[shape.stars().length][2];
-        for (int k = 0; k < pts.length; k++) {
-            pts[k][0] = cx + shape.stars()[k][0] * r;
-            pts[k][1] = cy + shape.stars()[k][1] * r;
-        }
         float halo = faint ? 0.16f : 0.07f;
         for (int ring = 5; ring >= 1; ring--) {
             circle(g, cx, cy, r * (0.5f + ring * 0.26f), RpgUi.fade(0xFF05070F, halo * alpha));
         }
-        int lineColor = RpgUi.fade(faint ? 0xFF8090C0 : 0xFFAFC3FF, (faint ? 0.35f : 0.6f) * alpha);
-        for (int[] e : shape.edges()) {
-            line(g, pts[e[0]][0], pts[e[0]][1], pts[e[1]][0], pts[e[1]][1], faint ? 0.5f : 0.7f, lineColor);
+        if (faint) return;  // a árvore de perks desenha a silhueta por cima
+        List<PerkDef> perks = PerkTrees.of(skill);
+        cy -= SHAPE_LIFT * r;
+        r *= SHAPE_SCALE;
+        int lineColor = RpgUi.fade(0xFFAFC3FF, 0.6f * alpha);
+        for (PerkDef p : perks) {
+            for (String req : p.requires) {
+                PerkDef parent = PerkTrees.byLocal(skill, req);
+                line(g, cx + parent.x() * r, cy + parent.y() * r, cx + p.x() * r, cy + p.y() * r, 0.7f, lineColor);
+            }
         }
         float size = Math.max(1.2f, r * 0.04f);
-        for (float[] p : pts) {
-            circle(g, p[0], p[1], size * 2.2f, RpgUi.fade(0xFF9FB4FF, 0.16f * alpha));
-            diamond(g, p[0], p[1], size, RpgUi.fade(0xFFE8EEFF, alpha));
+        for (PerkDef p : perks) {
+            float x = cx + p.x() * r;
+            float y = cy + p.y() * r;
+            circle(g, x, y, size * 2.2f, RpgUi.fade(0xFF9FB4FF, 0.16f * alpha));
+            diamond(g, x, y, size, RpgUi.fade(0xFFE8EEFF, alpha));
         }
     }
 
@@ -289,8 +295,9 @@ public class StatusScreen extends Screen {
     private PerkDef drawPerkTree(GuiGraphics g, SyncRpgDataPayload data, Skill skill, float cx, float cy, float r,
                                  float alpha, boolean interactive, int mouseX, int mouseY) {
         List<PerkDef> perks = PerkTrees.of(skill);
-        float rx = r * 1.4f;
-        float ry = r * 0.84f;
+        cy -= SHAPE_LIFT * r;
+        float rx = r * SHAPE_SCALE;
+        float ry = r * SHAPE_SCALE;
         for (PerkDef p : perks) {
             for (String req : p.requires) {
                 PerkDef parent = PerkTrees.byLocal(skill, req);
@@ -429,7 +436,10 @@ public class StatusScreen extends Screen {
             int[] gradient = RpgUi.HEALTH;
             switch (attribute) {
                 case HEALTH -> { if (player != null) { value = player.getHealth(); max = player.getMaxHealth(); } }
-                case STAMINA -> { if (res != null) { value = res.stamina(); max = res.maxStamina(); } gradient = RpgUi.STAMINA; }
+                case STAMINA -> {
+                    if (res != null) { value = res.stamina(); max = res.maxStamina(); }
+                    gradient = res != null && res.exhausted() ? RpgUi.STAMINA_EXHAUSTED : RpgUi.STAMINA;
+                }
                 case MAGICKA -> { if (res != null) { value = res.magicka(); max = res.maxMagicka(); } gradient = RpgUi.MAGICKA; }
             }
             int points = attribute.ordinal() < data.attributePoints().length ? data.attributePoints()[attribute.ordinal()] : 0;

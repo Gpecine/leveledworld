@@ -33,7 +33,8 @@ public final class RpgHud {
         RpgUi.bar(g, bx, Y + 6, bw, 5, progress(data.xp(), data.xpToNext()), RpgUi.XP);
         ResourcesPayload res = ClientRpgData.resources();
         if (res != null) {
-            RpgUi.bar(g, bx, Y + 15, bw, 3, progress(res.stamina(), res.maxStamina()), RpgUi.STAMINA);
+            RpgUi.bar(g, bx, Y + 15, bw, 3, progress(res.stamina(), res.maxStamina()),
+                    res.exhausted() ? RpgUi.STAMINA_EXHAUSTED : RpgUi.STAMINA);
             RpgUi.bar(g, bx, Y + 22, bw, 3, progress(res.magicka(), res.maxMagicka()), RpgUi.MAGICKA);
         }
 

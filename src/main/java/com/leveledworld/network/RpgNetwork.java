@@ -64,8 +64,9 @@ public final class RpgNetwork {
         PacketDistributor.sendToPlayer(player, new StealthPayload(state));
     }
 
-    public static void syncResources(ServerPlayer player, float stamina, float maxStamina, float magicka, float maxMagicka) {
-        PacketDistributor.sendToPlayer(player, new ResourcesPayload(stamina, maxStamina, magicka, maxMagicka));
+    public static void syncResources(ServerPlayer player, float stamina, float maxStamina, float magicka, float maxMagicka,
+                                     boolean exhausted) {
+        PacketDistributor.sendToPlayer(player, new ResourcesPayload(stamina, maxStamina, magicka, maxMagicka, exhausted));
     }
 
     private static void handleMobLevel(MobLevelPayload payload, IPayloadContext context) {

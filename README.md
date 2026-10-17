@@ -36,7 +36,10 @@ o personagem evolui usando skills, e **o mundo inteiro escala com o seu level** 
 
 ### Perks (árvores de constelação)
 - Cada level do personagem dá **1 ponto de perk**.
-- Cada skill tem uma árvore com **15 perks** (180 no total), alguns com vários ranks. Para comprar, é preciso ter o
+- Cada skill tem uma árvore com **15 perks** (180 no total), alguns com vários ranks. As estrelas de cada árvore
+  desenham a silhueta da skill: espada (Uma Mão), machadão de lâmina dupla (Duas Mãos), arco com flecha, escudo,
+  peitoral (Pesada), pena (Leve), olho (Furtividade), corredor (Atletismo), picareta, pinheiro (Lenhador),
+  bigorna (Ferraria) e espiga de trigo (Agricultura). Para comprar, é preciso ter o
   level de skill exigido e o perk anterior na árvore.
 - Na tela **K**, selecione uma skill no carrossel para ver a árvore. Passe o mouse para ver os detalhes e clique para aprender.
 - **Skill lendária**: no level 100, o botão "Tornar Lendária" volta a skill ao level 15 e devolve os pontos de perk
@@ -64,9 +67,12 @@ Cada level do personagem dá **1 ponto** para investir na tela **K**:
 
 | Atributo | Por ponto | Uso |
 |---|---|---|
-| Vida | +2 corações | vida máxima |
-| Stamina | +10 (base 100) e +0,5% de velocidade de corrida (máx. +15%) | correr (10/s), pular (4) e atacar (3); regenera 15/s após 1s. Sem stamina, não dá para correr |
+| Vida | +½ coração (1 coração a cada 2 pontos) | vida máxima |
+| Stamina | +10 (base 100), +5% de recuperação e +0,5% de velocidade de corrida (máx. +15%) | correr (12/s), pular (5), atacar (8; ×1,5 com armas de duas mãos) e atirar com arco (6). Recupera 12/s após 1s |
 | Mana | +10 (base 100) | regenera 3/s; será usada pelo sistema de magias |
+
+**Exaustão**: se a stamina acabar, o personagem fica exausto (barra vermelha). Ele não corre nem ataca, e o arco
+dispara fraco, até recuperar 30% da stamina. Os valores ficam em `[stamina]` na config do servidor.
 
 ### Mundo escalado
 Todo mob hostil, ao surgir, recebe um level baseado no **jogador mais próximo** (raio 128):

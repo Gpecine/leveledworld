@@ -22,6 +22,8 @@ public final class RpgUi {
     public static final int[] XP = {0xFFF8DC7A, 0xFFC0861C};
     public static final int[] HEALTH = {0xFFFF7A6E, 0xFFA8141E};
     public static final int[] STAMINA = {0xFF8BE88A, 0xFF23803A};
+    /** Stamina exausta: barra avermelhada até recuperar. */
+    public static final int[] STAMINA_EXHAUSTED = {0xFFF08A6A, 0xFF8A2A1A};
     public static final int[] MAGICKA = {0xFF8DB8FF, 0xFF2448C0};
     public static final int[] SKILL = {0xFF7FE0C8, 0xFF1F7F70};
 

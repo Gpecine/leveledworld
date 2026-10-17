@@ -6,7 +6,9 @@ import com.leveledworld.network.RpgNetwork;
 import com.leveledworld.skill.Gear;
 import com.leveledworld.skill.PerkStats;
 import com.leveledworld.skill.Stat;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -140,24 +142,38 @@ public final class AttributeService {
         data.setMagicka(maxMagicka(data));
     }
 
-    /** Tenta gastar stamina; consome o que houver e retorna se havia o suficiente. */
+    /**
+     * Tenta gastar stamina; consome o que houver e retorna se havia o suficiente. Se zerar, o personagem fica
+     * exausto (sem correr nem atacar) até recuperar {@code exhaustionRecovery} da stamina máxima.
+     */
     public static boolean useStamina(ServerPlayer player, double amount) {
         if (amount <= 0 || player.isCreative() || player.isSpectator()) return true;
         PlayerRpgData data = LevelingService.get(player);
         boolean enough = data.stamina() >= amount;
         data.setStamina((float) Math.max(0, data.stamina() - amount));
         data.staminaRegenDelay = LWConfig.STAMINA_REGEN_DELAY_TICKS.get();
-        if (data.stamina() <= 0 && stat(data, Stat.SECOND_WIND) > 0) {
+        if (data.stamina() <= 0) {
             CombatState state = CombatState.of(player);
             long now = player.level().getGameTime();
-            if (now - state.lastSecondWindTick > 1200) {  // Segundo Fôlego: recarga de 60s
+            if (stat(data, Stat.SECOND_WIND) > 0 && now - state.lastSecondWindTick > 1200) {  // Segundo Fôlego: recarga de 60s
                 state.lastSecondWindTick = now;
                 data.setStamina(maxStamina(data) * 0.5f);
-                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.leveledworld.second_wind")
-                        .withStyle(net.minecraft.ChatFormatting.GREEN), true);
+                player.displayClientMessage(Component.translatable("message.leveledworld.second_wind")
+                        .withStyle(ChatFormatting.GREEN), true);
+            } else if (!data.exhausted) {
+                data.exhausted = true;
+                player.setSprinting(false);
+                player.displayClientMessage(Component.translatable("message.leveledworld.exhausted")
+                        .withStyle(ChatFormatting.RED), true);
+                data.lastSentStamina = Float.NaN;
             }
         }
         return enough;
+    }
+
+    /** Exausto: a stamina acabou e ainda não recuperou o bastante. Sem correr nem atacar. */
+    public static boolean isExhausted(ServerPlayer player) {
+        return !player.isCreative() && !player.isSpectator() && LevelingService.get(player).exhausted;
     }
 
     /** Recupera stamina (ex.: perks de bloqueio). */
@@ -178,8 +194,18 @@ public final class AttributeService {
         PlayerRpgData data = LevelingService.get(player);
         double mult = 1;
         if (Gear.isSword(player.getMainHandItem())) mult -= stat(data, Stat.SWORD_STAMINA);
-        else if (Gear.isTwoHanded(player.getMainHandItem())) mult -= stat(data, Stat.HEAVY_STAMINA);
+        else if (Gear.isTwoHanded(player.getMainHandItem())) {
+            mult = LWConfig.TWO_HANDED_ATTACK_MULTIPLIER.get() * (1 - stat(data, Stat.HEAVY_STAMINA));
+        }
         return LWConfig.ATTACK_STAMINA_COST.get() * Math.max(0, mult);
+    }
+
+    /** Recuperação de stamina por tick: base, pontos em Stamina e perks. */
+    private static double regenPerTick(ServerPlayer player, PlayerRpgData data) {
+        double mult = 1 + LWConfig.STAMINA_REGEN_PER_POINT.get() * data.points(RpgAttribute.STAMINA)
+                + stat(data, Stat.STAMINA_REGEN)
+                + (Gear.count(player, Gear.Weight.LIGHT) >= 2 ? stat(data, Stat.LIGHT_STAMINA_REGEN) : 0);
+        return LWConfig.STAMINA_REGEN_PER_SECOND.get() / 20.0 * mult;
     }
 
     /** Bônus de velocidade de corrida: pontos em Stamina (com teto) + perks de Atletismo. */
@@ -211,12 +237,19 @@ public final class AttributeService {
         if (data.stamina() < 0) data.setStamina(maxStamina);
         if (data.magicka() < 0) data.setMagicka(maxMagicka);
 
-        double regenMult = 1 + stat(data, Stat.STAMINA_REGEN)
-                + (Gear.count(player, Gear.Weight.LIGHT) >= 2 ? stat(data, Stat.LIGHT_STAMINA_REGEN) : 0);
-        double regen = LWConfig.STAMINA_REGEN_PER_SECOND.get() / 20.0 * regenMult;
+        double regen = regenPerTick(player, data);
         boolean tireless = stat(data, Stat.TIRELESS) > 0;
         boolean swimmingFree = player.isInWater() && stat(data, Stat.SWIM_FREE) > 0;
 
+        if (data.exhausted) {
+            if (player.isCreative() || player.isSpectator()
+                    || data.stamina() >= maxStamina * LWConfig.EXHAUSTION_RECOVERY.get()) {
+                data.exhausted = false;
+                data.lastSentStamina = Float.NaN;
+            } else if (player.isSprinting()) {
+                player.setSprinting(false);
+            }
+        }
         if (player.isSprinting() && !player.isCreative() && !player.isSpectator() && !swimmingFree) {
             double cost = LWConfig.SPRINT_STAMINA_PER_SECOND.get() / 20.0 * Math.max(0, 1 - stat(data, Stat.SPRINT_COST));
             if (tireless) {
@@ -242,7 +275,7 @@ public final class AttributeService {
                 && (data.stamina() != data.lastSentStamina || data.magicka() != data.lastSentMagicka)) {
             data.lastSentStamina = data.stamina();
             data.lastSentMagicka = data.magicka();
-            RpgNetwork.syncResources(player, data.stamina(), maxStamina, data.magicka(), maxMagicka);
+            RpgNetwork.syncResources(player, data.stamina(), maxStamina, data.magicka(), maxMagicka, data.exhausted);
         }
     }
 

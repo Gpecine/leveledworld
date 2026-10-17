@@ -5,7 +5,8 @@ import java.util.List;
 /**
  * Um perk de uma árvore. {@code levels[i]} é o nível de skill exigido para o rank i+1 (perks sem ranks têm 1
  * entrada). {@code requires} lista perks da mesma árvore dos quais basta ter UM (vazio = raiz).
- * {@code x}/{@code y} são a posição da estrela na constelação, em [-1, 1] (y para baixo), calculada pelo layout.
+ * {@code x}/{@code y} são a posição da estrela na constelação, em raios da árvore (y para baixo)
+ * definida em {@link PerkTrees}.
  */
 public final class PerkDef {
     public record Effect(Stat stat, double[] values) {
@@ -22,8 +23,8 @@ public final class PerkDef {
     public final List<String> requires;
     public final List<Effect> effects;
     public final int index;
-    float x;
-    float y;
+    float x = Float.NaN;
+    float y = Float.NaN;
 
     PerkDef(Skill skill, String localId, int[] levels, List<String> requires, List<Effect> effects, int index) {
         this.skill = skill;

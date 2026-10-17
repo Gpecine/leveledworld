@@ -30,12 +30,18 @@ public final class LWConfig {
     public static final ModConfigSpec.DoubleValue MAX_SPRINT_SPEED_BONUS;
     public static final ModConfigSpec.DoubleValue BASE_MAGICKA;
     public static final ModConfigSpec.DoubleValue MAGICKA_PER_POINT;
+    public static final ModConfigSpec.DoubleValue MAGICKA_REGEN_PER_SECOND;
+
+    // Stamina
     public static final ModConfigSpec.DoubleValue SPRINT_STAMINA_PER_SECOND;
     public static final ModConfigSpec.DoubleValue JUMP_STAMINA_COST;
     public static final ModConfigSpec.DoubleValue ATTACK_STAMINA_COST;
+    public static final ModConfigSpec.DoubleValue TWO_HANDED_ATTACK_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue BOW_STAMINA_COST;
     public static final ModConfigSpec.DoubleValue STAMINA_REGEN_PER_SECOND;
+    public static final ModConfigSpec.DoubleValue STAMINA_REGEN_PER_POINT;
     public static final ModConfigSpec.IntValue STAMINA_REGEN_DELAY_TICKS;
-    public static final ModConfigSpec.DoubleValue MAGICKA_REGEN_PER_SECOND;
+    public static final ModConfigSpec.DoubleValue EXHAUSTION_RECOVERY;
 
     // Escala de mobs
     public static final ModConfigSpec.BooleanValue SCALE_MOBS;
@@ -96,32 +102,44 @@ public final class LWConfig {
         b.push("attributes");
         POINTS_PER_LEVEL = b.comment("Pontos de atributo ganhos a cada level do personagem.")
                 .defineInRange("pointsPerLevel", 1, 0, 100);
-        HEALTH_PER_POINT = b.comment("Vida máxima ganha por ponto em Vida (4 = 2 corações).")
-                .defineInRange("healthPerAttributePoint", 4.0, 0.0, 100.0);
-        BASE_STAMINA = b.comment("Stamina máxima sem pontos.")
-                .defineInRange("baseStamina", 100.0, 1.0, 10000.0);
-        STAMINA_PER_POINT = b.comment("Stamina máxima ganha por ponto em Stamina.")
-                .defineInRange("staminaPerPoint", 10.0, 0.0, 1000.0);
-        SPRINT_SPEED_PER_STAMINA_POINT = b.comment("Bônus de velocidade de corrida por ponto em Stamina (0.005 = +0.5%).")
-                .defineInRange("sprintSpeedPerStaminaPoint", 0.005, 0.0, 1.0);
-        MAX_SPRINT_SPEED_BONUS = b.comment("Bônus máximo de velocidade de corrida vindo da Stamina (0.15 = +15%).")
-                .defineInRange("maxSprintSpeedBonus", 0.15, 0.0, 5.0);
+        HEALTH_PER_POINT = b.comment("Vida máxima ganha por ponto em Vida (1 = meio coração; 2 pontos = 1 coração).")
+                .defineInRange("maxHealthPerPoint", 1.0, 0.0, 100.0);
         BASE_MAGICKA = b.comment("Mana máxima sem pontos.")
                 .defineInRange("baseMagicka", 100.0, 1.0, 10000.0);
         MAGICKA_PER_POINT = b.comment("Mana máxima ganha por ponto em Mana.")
                 .defineInRange("magickaPerPoint", 10.0, 0.0, 1000.0);
-        SPRINT_STAMINA_PER_SECOND = b.comment("Stamina gasta por segundo correndo. Sem stamina não dá para correr.")
-                .defineInRange("sprintCostPerSecond", 10.0, 0.0, 1000.0);
-        JUMP_STAMINA_COST = b.comment("Stamina gasta por pulo.")
-                .defineInRange("jumpCost", 4.0, 0.0, 1000.0);
-        ATTACK_STAMINA_COST = b.comment("Stamina gasta por ataque corpo-a-corpo.")
-                .defineInRange("attackCost", 3.0, 0.0, 1000.0);
-        STAMINA_REGEN_PER_SECOND = b.comment("Stamina recuperada por segundo.")
-                .defineInRange("staminaRegenPerSecond", 15.0, 0.0, 1000.0);
-        STAMINA_REGEN_DELAY_TICKS = b.comment("Ticks sem gastar stamina antes de começar a recuperar (20 = 1s).")
-                .defineInRange("staminaRegenDelay", 20, 0, 1200);
         MAGICKA_REGEN_PER_SECOND = b.comment("Mana recuperada por segundo.")
                 .defineInRange("magickaRegenPerSecond", 3.0, 0.0, 1000.0);
+        b.pop();
+
+        b.push("stamina");
+        BASE_STAMINA = b.comment("Stamina máxima sem pontos.")
+                .defineInRange("baseStamina", 100.0, 1.0, 10000.0);
+        STAMINA_PER_POINT = b.comment("Stamina máxima ganha por ponto em Stamina.")
+                .defineInRange("staminaPerPoint", 10.0, 0.0, 1000.0);
+        STAMINA_REGEN_PER_SECOND = b.comment("Stamina recuperada por segundo, sem pontos.")
+                .defineInRange("regenPerSecond", 12.0, 0.0, 1000.0);
+        STAMINA_REGEN_PER_POINT = b.comment("Recuperação de stamina extra por ponto em Stamina (0.05 = +5%; 20 pontos = o dobro).")
+                .defineInRange("regenBonusPerPoint", 0.05, 0.0, 10.0);
+        STAMINA_REGEN_DELAY_TICKS = b.comment("Ticks sem gastar stamina antes de começar a recuperar (20 = 1s).")
+                .defineInRange("regenDelay", 20, 0, 1200);
+        SPRINT_SPEED_PER_STAMINA_POINT = b.comment("Bônus de velocidade de corrida por ponto em Stamina (0.005 = +0.5%).")
+                .defineInRange("sprintSpeedPerStaminaPoint", 0.005, 0.0, 1.0);
+        MAX_SPRINT_SPEED_BONUS = b.comment("Bônus máximo de velocidade de corrida vindo da Stamina (0.15 = +15%).")
+                .defineInRange("maxSprintSpeedBonus", 0.15, 0.0, 5.0);
+        SPRINT_STAMINA_PER_SECOND = b.comment("Stamina gasta por segundo correndo.")
+                .defineInRange("sprintCostPerSecond", 12.0, 0.0, 1000.0);
+        JUMP_STAMINA_COST = b.comment("Stamina gasta por pulo.")
+                .defineInRange("jumpCost", 5.0, 0.0, 1000.0);
+        ATTACK_STAMINA_COST = b.comment("Stamina gasta por ataque corpo-a-corpo.")
+                .defineInRange("attackCost", 8.0, 0.0, 1000.0);
+        TWO_HANDED_ATTACK_MULTIPLIER = b.comment("Multiplicador do custo de ataque com armas de duas mãos (machados, maça, tridente).")
+                .defineInRange("twoHandedAttackMultiplier", 1.5, 0.0, 10.0);
+        BOW_STAMINA_COST = b.comment("Stamina gasta por disparo de arco.")
+                .defineInRange("bowCost", 6.0, 0.0, 1000.0);
+        EXHAUSTION_RECOVERY = b.comment("Quando a stamina acaba, o personagem fica exausto: não corre nem ataca até recuperar",
+                        "esta fração da stamina máxima (0.3 = 30%).")
+                .defineInRange("exhaustionRecovery", 0.3, 0.0, 1.0);
         b.pop();
 
         b.push("mobScaling");

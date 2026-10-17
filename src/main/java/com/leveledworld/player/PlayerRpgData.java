@@ -47,6 +47,8 @@ public final class PlayerRpgData {
 
     // Estado de runtime, não salvo.
     int staminaRegenDelay;
+    /** Stamina zerou: sem correr nem atacar até recuperar parte dela (não é salvo). */
+    boolean exhausted;
     float lastSentStamina = Float.NaN;
     float lastSentMagicka = Float.NaN;
     int lastLevelSoundTick;
