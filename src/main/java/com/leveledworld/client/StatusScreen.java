@@ -1,5 +1,6 @@
 package com.leveledworld.client;
 
+import com.leveledworld.LeveledWorld;
 import com.leveledworld.network.ClientRpgData;
 import com.leveledworld.network.ResourcesPayload;
 import com.leveledworld.network.SpendPointPayload;
@@ -7,6 +8,7 @@ import com.leveledworld.network.SyncRpgDataPayload;
 import com.leveledworld.player.RpgAttribute;
 import com.leveledworld.skill.Perk;
 import com.leveledworld.skill.Skill;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,6 +17,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Matrix4f;
@@ -36,6 +39,14 @@ public class StatusScreen extends Screen {
     private static final RpgAttribute[] ATTRIBUTE_ORDER = {RpgAttribute.MAGICKA, RpgAttribute.HEALTH, RpgAttribute.STAMINA};
     private static final int PANEL_H = 54;
     private static final int BUTTON = 12;
+    private static final int SKY_W = 960;
+    private static final int SKY_H = 540;
+    /** Fundos gerados por tools/gen_skybox.py, um por skill (mesma ordem de Skill.values()). */
+    private static final ResourceLocation[] SKY_TEXTURES = new ResourceLocation[SKILLS.length];
+
+    static {
+        for (Skill s : SKILLS) SKY_TEXTURES[s.ordinal()] = LeveledWorld.id("textures/gui/sky/" + s.id() + ".png");
+    }
 
     private final Map<RpgAttribute, Button> buttons = new EnumMap<>(RpgAttribute.class);
     private final float[][] backgroundStars;
@@ -97,17 +108,52 @@ public class StatusScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Céu noturno com estrelas cintilando.
-        g.fillGradient(0, 0, width, height, 0xF0040611, 0xF0121A36);
-        g.fillGradient(0, (int) (height * 0.35f), width, (int) (height * 0.6f), 0x00000000, 0x1A5A6AB8);
+        g.fill(0, 0, width, height, 0xFF000000);
+        renderSkyScenes(g);
+        // Véu escuro para o texto e as constelações ficarem legíveis.
+        g.fillGradient(0, 0, width, height, 0x38000008, 0x70000008);
         float time = (System.currentTimeMillis() % 100000) / 1000f;
         for (float[] s : backgroundStars) {
             int x = (int) (s[0] * width);
             int y = (int) (s[1] * height);
-            float a = 0.35f + 0.35f * Mth.sin(time * 1.3f + s[2]);
+            float a = 0.2f + 0.3f * Mth.sin(time * 1.3f + s[2]);
             int size = (int) s[3];
             g.fill(x, y, x + size, y + size, RpgUi.fade(0xFFDDE6FF, a));
         }
+    }
+
+    /**
+     * Cada skill tem uma região do espaço como fundo. Ao girar o carrossel, o fundo da skill atual desliza
+     * (parallax) e se funde com o da próxima, como a câmera atravessando o céu.
+     */
+    private void renderSkyScenes(GuiGraphics g) {
+        int near = -1, far = -1;
+        for (int i = 0; i < SKILLS.length; i++) {
+            float ad = Math.abs(offset(i));
+            if (ad >= 1f) continue;
+            if (near < 0 || ad < Math.abs(offset(near))) { far = near; near = i; }
+            else if (far < 0 || ad < Math.abs(offset(far))) far = i;
+        }
+        if (far >= 0) drawSky(g, far, 1f);
+        if (near >= 0) drawSky(g, near, far >= 0 ? Mth.clamp(1f - Math.abs(offset(near)), 0f, 1f) : 1f);
+    }
+
+    private void drawSky(GuiGraphics g, int skill, float alpha) {
+        float d = offset(skill);
+        float time = (System.currentTimeMillis() % 600000) / 1000f;
+        float zoom = 1.18f + 0.06f * Math.abs(d);
+        int w = Math.round(width * zoom);
+        int h = Math.round(height * zoom);
+        float drift = Mth.sin(time * 0.07f + skill) * width * 0.015f;  // deriva lenta, "respirando"
+        float x = (width - w) / 2f - d * width * 0.12f + drift;
+        float y = (height - h) / 2f;
+        RenderSystem.enableBlend();
+        RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
+        g.pose().pushPose();
+        g.pose().translate(x, y, 0);
+        g.blit(SKY_TEXTURES[skill], 0, 0, w, h, 0, 0, SKY_W, SKY_H, SKY_W, SKY_H);
+        g.pose().popPose();
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
     }
 
     @Override
@@ -192,7 +238,7 @@ public class StatusScreen extends Screen {
         // Brilho de nebulosa atrás da constelação (mais forte na selecionada).
         float glow = selected ? 1f : 0.45f;
         for (int ring = 5; ring >= 1; ring--) {
-            circle(g, cx, cy, r * (0.45f + ring * 0.22f), RpgUi.fade(0xFF4A62C0, 0.05f * glow * alpha));
+            circle(g, cx, cy, r * (0.45f + ring * 0.22f), RpgUi.fade(0xFF0A0E20, 0.07f * glow * alpha));
         }
 
         int lineColor = RpgUi.fade(selected ? 0xFFAFC3FF : 0xFF8090C0, (selected ? 0.75f : 0.45f) * alpha);
