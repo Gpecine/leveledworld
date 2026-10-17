@@ -2,6 +2,14 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.6.1
+- Fundos da tela de constelações trocados por **imagens em alta resolução (1600×900)** fornecidas pelo autor:
+  galáxia espiral (Arquearia), nebulosa azul com aglomerado (Bloqueio), nebulosa vermelha (Armadura),
+  campo de asteroides dourado (Mineração) e nebulosa "olho" verde (Lenhador). Combate (pilares de poeira)
+  e Ferraria (supernova) usam a arte de referência do autor.
+- Saturação levemente reduzida (−8%) para combinar com a interface.
+- O jar ficou maior (~13 MB) por causa das imagens.
+
 ## 0.6.0
 ### Fundos de espaço na tela de constelações
 - Cada skill tem sua própria região do espaço como fundo, gerada de forma procedural e original (`tools/gen_skybox.py`):

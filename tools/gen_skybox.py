@@ -1,4 +1,5 @@
-"""Gera os fundos de espaço da tela de constelações (um por skill), de forma procedural e original.
+"""Gerador procedural de fundos de espaço (usado até a 0.6.0; a partir da 0.6.1 os fundos são imagens
+em alta resolução fornecidas pelo autor). Mantido como alternativa sem dependência de arte externa.
 
 Uso: python3 tools/gen_skybox.py <pasta-saida>
 Cada imagem é uma cena: pilares de poeira, galáxia espiral, nebulosa azul, nebulosa de emissão,

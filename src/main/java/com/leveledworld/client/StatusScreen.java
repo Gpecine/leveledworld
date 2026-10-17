@@ -39,9 +39,9 @@ public class StatusScreen extends Screen {
     private static final RpgAttribute[] ATTRIBUTE_ORDER = {RpgAttribute.MAGICKA, RpgAttribute.HEALTH, RpgAttribute.STAMINA};
     private static final int PANEL_H = 54;
     private static final int BUTTON = 12;
-    private static final int SKY_W = 960;
-    private static final int SKY_H = 540;
-    /** Fundos gerados por tools/gen_skybox.py, um por skill (mesma ordem de Skill.values()). */
+    private static final int SKY_W = 1600;
+    private static final int SKY_H = 900;
+    /** Fundos (1600x900), um por skill, na mesma ordem de Skill.values(). */
     private static final ResourceLocation[] SKY_TEXTURES = new ResourceLocation[SKILLS.length];
 
     static {
