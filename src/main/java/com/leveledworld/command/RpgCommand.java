@@ -8,6 +8,8 @@ import com.leveledworld.player.LevelingService;
 import com.leveledworld.player.PerkService;
 import com.leveledworld.player.PlayerRpgData;
 import com.leveledworld.player.RpgAttribute;
+import com.leveledworld.skill.PerkDef;
+import com.leveledworld.skill.PerkTrees;
 import com.leveledworld.skill.Skill;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -44,6 +46,8 @@ import java.util.Arrays;
  */
 @EventBusSubscriber(modid = LeveledWorld.MODID)
 public final class RpgCommand {
+    private static final DynamicCommandExceptionType UNKNOWN_PERK =
+            new DynamicCommandExceptionType(id -> Component.translatable("command.leveledworld.unknown_perk", id));
     private static final DynamicCommandExceptionType UNKNOWN_SKILL =
             new DynamicCommandExceptionType(id -> Component.translatable("command.leveledworld.unknown_skill", id));
 
@@ -112,6 +116,12 @@ public final class RpgCommand {
                                             PerkService.resetPerks(p);
                                             return info(c, p);
                                         })))
+                        .then(Commands.literal("give")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(perkArg()
+                                                .executes(c -> givePerk(c, -1))
+                                                .then(Commands.argument("rank", IntegerArgumentType.integer(0))
+                                                        .executes(c -> givePerk(c, IntegerArgumentType.getInteger(c, "rank")))))))
                         .then(Commands.literal("points")
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
@@ -164,6 +174,26 @@ public final class RpgCommand {
         Skill skill = Skill.byId(id);
         if (skill == null) throw UNKNOWN_SKILL.create(id);
         return skill;
+    }
+
+    private static com.mojang.brigadier.builder.RequiredArgumentBuilder<CommandSourceStack, String> perkArg() {
+        return Commands.argument("perk", StringArgumentType.word())
+                .suggests((c, b) -> SharedSuggestionProvider.suggest(PerkTrees.all().stream().map(p -> p.id), b));
+    }
+
+    /** Dá um perk direto, sem pontos nem requisitos (rank -1 = máximo, 0 = remove). Para admins e testes. */
+    private static int givePerk(CommandContext<CommandSourceStack> c, int rank) throws CommandSyntaxException {
+        ServerPlayer p = EntityArgument.getPlayer(c, "player");
+        String id = StringArgumentType.getString(c, "perk");
+        PerkDef perk = PerkTrees.byId(id);
+        if (perk == null) throw UNKNOWN_PERK.create(id);
+        int r = rank < 0 ? perk.maxRank() : Math.min(rank, perk.maxRank());
+        LevelingService.get(p).setPerkRank(perk.id, r);
+        AttributeService.applyModifiers(p);
+        RpgNetwork.sync(p);
+        c.getSource().sendSuccess(() -> Component.translatable("command.leveledworld.perk_given",
+                Component.translatable(perk.translationKey()), r, p.getDisplayName()), true);
+        return r;
     }
 
     private static int giveTome(CommandContext<CommandSourceStack> c, int levels) throws CommandSyntaxException {

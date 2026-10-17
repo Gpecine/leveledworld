@@ -2,6 +2,24 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.8.4
+### Mineração em Veio
+- Corrigido: o veio inteiro não quebrava em **minérios colocados por jogadores**, porque a trava anti-farm também
+  barrava a corrente do veio. Agora o veio quebra mesmo com minérios colocados. Os colocados continuam sem dar XP
+  nem bônus de drop, então o anti-farm segue valendo.
+- A derrubada de árvores continua ignorando troncos colocados, para não destruir construções de madeira ao lado
+  de árvores.
+
+### Tecla de ação em área
+- Nova opção em **Opções → Controles → Leveled World**: "Ação em área: veio, árvore e colheita". Ela define a
+  tecla para minerar o veio inteiro, derrubar a árvore inteira e colher 3×3.
+- Sem tecla (padrão), continua usando o agachar (Shift). Com uma tecla escolhida (ex.: Ctrl), só essa tecla
+  ativa as ações, e agachar volta a ser só agachar.
+
+### Comandos
+- `/rpg perks give <jogador> <perk> [rank]` dá um perk direto, sem pontos nem requisitos. Sem rank, dá o rank
+  máximo; rank 0 remove o perk.
+
 ## 0.8.3
 - A **barra vermelha** (exausto) enche com o **dobro da velocidade** da recuperação normal da stamina, já contando
   os pontos em Stamina e os perks. Se a stamina normal enche em 2s, a barra vermelha enche em 1s; se enche em 1s,

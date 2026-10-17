@@ -18,6 +18,16 @@ public final class CombatState {
         return STATES.computeIfAbsent(player, p -> new CombatState());
     }
 
+    /** Tecla de ação em área (veio, árvore, colheita): escolhida nos controles e se está apertada. */
+    public boolean areaKeyBound;
+    public boolean areaKeyDown;
+
+    /** Ação em área ativa: a tecla escolhida nos controles ou, sem tecla, o agachar. */
+    public static boolean areaAction(Player player) {
+        CombatState state = of(player);
+        return state.areaKeyBound ? state.areaKeyDown : player.isCrouching();
+    }
+
     /** Força do ataque (0..1) capturada no início do golpe, antes do vanilla zerar o carregamento. */
     public float lastAttackStrength = 1f;
     public long lastBlockTick = -1000;

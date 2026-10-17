@@ -2,6 +2,7 @@ package com.leveledworld.network;
 
 import com.leveledworld.config.LWConfig;
 import com.leveledworld.player.AttributeService;
+import com.leveledworld.player.CombatState;
 import com.leveledworld.player.LevelingService;
 import com.leveledworld.player.PerkService;
 import com.leveledworld.player.PlayerRpgData;
@@ -25,6 +26,7 @@ public final class RpgNetwork {
                 .playToServer(SpendPointPayload.TYPE, SpendPointPayload.STREAM_CODEC, RpgNetwork::handleSpendPoint)
                 .playToServer(BuyPerkPayload.TYPE, BuyPerkPayload.STREAM_CODEC, RpgNetwork::handleBuyPerk)
                 .playToServer(LegendaryPayload.TYPE, LegendaryPayload.STREAM_CODEC, RpgNetwork::handleLegendary)
+                .playToServer(AreaKeyPayload.TYPE, AreaKeyPayload.STREAM_CODEC, RpgNetwork::handleAreaKey)
                 .playToClient(StealthPayload.TYPE, StealthPayload.STREAM_CODEC, RpgNetwork::handleStealth);
     }
 
@@ -67,6 +69,14 @@ public final class RpgNetwork {
     public static void syncResources(ServerPlayer player, float stamina, float maxStamina, float magicka, float maxMagicka,
                                      boolean exhausted) {
         PacketDistributor.sendToPlayer(player, new ResourcesPayload(stamina, maxStamina, magicka, maxMagicka, exhausted));
+    }
+
+    private static void handleAreaKey(AreaKeyPayload payload, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            CombatState state = CombatState.of(context.player());
+            state.areaKeyBound = payload.bound();
+            state.areaKeyDown = payload.down();
+        });
     }
 
     private static void handleMobLevel(MobLevelPayload payload, IPayloadContext context) {

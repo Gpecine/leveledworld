@@ -1,6 +1,7 @@
 package com.leveledworld.event;
 
 import com.leveledworld.LeveledWorld;
+import com.leveledworld.player.CombatState;
 import com.leveledworld.player.LevelingService;
 import com.leveledworld.skill.PerkStats;
 import com.leveledworld.skill.Skill;
@@ -86,7 +87,7 @@ public final class FarmingPerkEvents {
         ServerLevel level = (ServerLevel) player.level();
         BlockPos center = event.getPos();
         if (!SkillXpEvents.isMatureCrop(level.getBlockState(center))) return;
-        int r = player.isCrouching() && PerkStats.has(player, Stat.AREA_HARVEST) ? 1 : 0;
+        int r = CombatState.areaAction(player) && PerkStats.has(player, Stat.AREA_HARVEST) ? 1 : 0;
         int harvested = 0;
         for (BlockPos p : BlockPos.betweenClosed(center.offset(-r, 0, -r), center.offset(r, 0, r))) {
             BlockState state = level.getBlockState(p);

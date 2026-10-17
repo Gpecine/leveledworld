@@ -111,6 +111,8 @@ Configurável em `[dimensions]` na config do servidor, incluindo dimensões de o
 - **Tecla `K`**: céu de constelações (uma por skill, cada uma com sua região do espaço como fundo) para girar arrastando.
   A skill selecionada mostra sua árvore de perks. Embaixo fica o painel do personagem, com Mana / Vida / Stamina,
   botões "+" para gastar pontos e os selos de pontos de atributo (dourado) e de perk (roxo).
+- **Tecla de ação em área** (Opções → Controles → Leveled World): define a tecla usada para minerar o veio inteiro,
+  derrubar a árvore inteira e colher em área 3×3. Sem tecla (padrão), essas ações usam o agachar (Shift).
 - **Olho de furtividade** acima da mira quando agachado: fechado (oculto), entreaberto (alguém desconfia) ou aberto (visto).
 - **Placa nos mobs**: medalhão com o level + nome + barra de vida. A cor do medalhão indica a dificuldade
   em relação a você: cinza (muito mais fraco), verde, dourado (equivalente), laranja, vermelho com ☠ (muito mais forte).
@@ -125,6 +127,7 @@ Configurável em `[dimensions]` na config do servidor, incluindo dimensões de o
 | `/rpg skill addxp <jogador> <skill> <xp>` | OP |
 | `/rpg points add <jogador> <n>` / `/rpg points reset <jogador>` | OP |
 | `/rpg perks reset <jogador>` / `/rpg perks points <jogador> <n>` (adiciona pontos) | OP |
+| `/rpg perks give <jogador> <perk> [rank]` — dá um perk direto, ex.: `mining.mineracao_veio` | OP |
 | `/rpg tome <jogador> <skill> [levels]` — dá um tomo de skill | OP |
 | `/rpg stamina drain <jogador>` / `/rpg stamina refill <jogador>` — zera (deixa exausto) ou enche a stamina | OP |
 | `/rpg mob <entidade>` — mostra o level de um mob | OP |

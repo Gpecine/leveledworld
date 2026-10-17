@@ -1,6 +1,7 @@
 package com.leveledworld.client;
 
 import com.leveledworld.LeveledWorld;
+import com.leveledworld.network.AreaKeyPayload;
 import com.leveledworld.network.ClientRpgData;
 import com.leveledworld.network.ResourcesPayload;
 import net.minecraft.ChatFormatting;
@@ -13,9 +14,13 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 @EventBusSubscriber(modid = LeveledWorld.MODID, value = Dist.CLIENT)
 public final class ClientGameEvents {
+    /** Último estado da tecla de ação em área enviado ao servidor (null = reenviar). */
+    private static Boolean lastAreaBound;
+    private static boolean lastAreaDown;
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
@@ -32,6 +37,16 @@ public final class ClientGameEvents {
             if (climb > 0) {
                 var v = mc.player.getDeltaMovement();
                 mc.player.setDeltaMovement(v.x, Math.min(0.2 * (1 + climb), v.y * (1 + climb)), v.z);
+            }
+        }
+        // Tecla de ação em área: avisa o servidor só quando muda.
+        if (mc.player != null && mc.getConnection() != null) {
+            boolean bound = !ClientSetup.AREA_ACTION.isUnbound();
+            boolean down = bound && ClientSetup.AREA_ACTION.isDown();
+            if (lastAreaBound == null || bound != lastAreaBound || down != lastAreaDown) {
+                lastAreaBound = bound;
+                lastAreaDown = down;
+                PacketDistributor.sendToServer(new AreaKeyPayload(bound, down));
             }
         }
         while (ClientSetup.OPEN_STATUS.consumeClick()) {
@@ -59,6 +74,7 @@ public final class ClientGameEvents {
     @SubscribeEvent
     public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientRpgData.clear();
+        lastAreaBound = null;
     }
 
     private ClientGameEvents() {}
