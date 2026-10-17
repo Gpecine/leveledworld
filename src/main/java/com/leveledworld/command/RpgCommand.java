@@ -122,6 +122,21 @@ public final class RpgCommand {
                                                     RpgNetwork.sync(p);
                                                     return info(c, p);
                                                 })))))
+                .then(Commands.literal("stamina").requires(s -> s.hasPermission(2))
+                        .then(Commands.literal("drain")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(c -> {
+                                            // Zera a stamina como se tivesse gastado tudo (deixa exausto).
+                                            ServerPlayer p = EntityArgument.getPlayer(c, "player");
+                                            AttributeService.useStamina(p, LevelingService.get(p).stamina() + 1);
+                                            return 1;
+                                        })))
+                        .then(Commands.literal("refill")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(c -> {
+                                            AttributeService.refill(EntityArgument.getPlayer(c, "player"));
+                                            return 1;
+                                        }))))
                 .then(Commands.literal("tome").requires(s -> s.hasPermission(2))
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(skillArg()

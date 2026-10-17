@@ -71,8 +71,10 @@ Cada level do personagem dá **1 ponto** para investir na tela **K**:
 | Stamina | +10 (base 100), +5% de recuperação e +0,5% de velocidade de corrida (máx. +15%) | correr (12/s), pular (5), atacar (8; ×1,5 com armas de duas mãos) e atirar com arco (6). Recupera 12/s após 1s |
 | Mana | +10 (base 100) | regenera 3/s; será usada pelo sistema de magias |
 
-**Exaustão**: se a stamina acabar, o personagem fica exausto (barra vermelha). Ele não corre nem ataca, e o arco
-dispara fraco, até recuperar 30% da stamina. Os valores ficam em `[stamina]` na config do servidor.
+**Exaustão**: se a stamina acabar, o personagem fica exausto (barra vermelha) até a barra **encher de novo**.
+Enquanto isso, ele não corre nem ataca, o arco dispara fraco, e ele anda e quebra blocos na **metade da velocidade**.
+A redução vale para a mão e para qualquer ferramenta, sobre a velocidade final (já com Eficiência e Pressa).
+Os valores ficam em `[stamina]` na config do servidor.
 
 ### Mundo escalado
 Todo mob hostil, ao surgir, recebe um level baseado no **jogador mais próximo** (raio 128):
@@ -123,6 +125,7 @@ Configurável em `[dimensions]` na config do servidor, incluindo dimensões de o
 | `/rpg points add <jogador> <n>` / `/rpg points reset <jogador>` | OP |
 | `/rpg perks reset <jogador>` / `/rpg perks points <jogador> <n>` (adiciona pontos) | OP |
 | `/rpg tome <jogador> <skill> [levels]` — dá um tomo de skill | OP |
+| `/rpg stamina drain <jogador>` / `/rpg stamina refill <jogador>` — zera (deixa exausto) ou enche a stamina | OP |
 | `/rpg mob <entidade>` — mostra o level de um mob | OP |
 
 ## Configuração

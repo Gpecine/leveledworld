@@ -25,7 +25,7 @@
   "attribute.leveledworld.health": "Vida",
   "attribute.leveledworld.health.desc": "+½ coração de vida máxima por ponto (1 coração a cada 2 pontos).",
   "attribute.leveledworld.stamina": "Stamina",
-  "attribute.leveledworld.stamina.desc": "Por ponto: +10 de stamina máxima, +5% de recuperação e +0,5% de velocidade de corrida (máx. +15%). Correr, pular, atacar e atirar gastam stamina. Se ela acabar, você fica exausto e não pode correr nem atacar até recuperar 30%.",
+  "attribute.leveledworld.stamina.desc": "Por ponto: +10 de stamina máxima, +5% de recuperação e +0,5% de velocidade de corrida (máx. +15%). Correr, pular, atacar e atirar gastam stamina. Se ela acabar, você fica exausto até a barra encher de novo: sem correr nem atacar, andando e quebrando blocos na metade da velocidade.",
   "attribute.leveledworld.magicka": "Mana",
   "attribute.leveledworld.magicka.desc": "+10 de mana máxima por ponto. Será usada pelo sistema de magias.",
   "hud.leveledworld.level_up": "SUBIU DE LEVEL!",

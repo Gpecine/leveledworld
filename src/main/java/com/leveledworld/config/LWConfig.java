@@ -42,6 +42,8 @@ public final class LWConfig {
     public static final ModConfigSpec.DoubleValue STAMINA_REGEN_PER_POINT;
     public static final ModConfigSpec.IntValue STAMINA_REGEN_DELAY_TICKS;
     public static final ModConfigSpec.DoubleValue EXHAUSTION_RECOVERY;
+    public static final ModConfigSpec.DoubleValue EXHAUSTED_MOVE_SPEED;
+    public static final ModConfigSpec.DoubleValue EXHAUSTED_BREAK_SPEED;
 
     // Escala de mobs
     public static final ModConfigSpec.BooleanValue SCALE_MOBS;
@@ -137,9 +139,14 @@ public final class LWConfig {
                 .defineInRange("twoHandedAttackMultiplier", 1.5, 0.0, 10.0);
         BOW_STAMINA_COST = b.comment("Stamina gasta por disparo de arco.")
                 .defineInRange("bowCost", 6.0, 0.0, 1000.0);
-        EXHAUSTION_RECOVERY = b.comment("Quando a stamina acaba, o personagem fica exausto: não corre nem ataca até recuperar",
-                        "esta fração da stamina máxima (0.3 = 30%).")
-                .defineInRange("exhaustionRecovery", 0.3, 0.0, 1.0);
+        EXHAUSTION_RECOVERY = b.comment("Quando a stamina acaba, o personagem fica exausto (barra vermelha): não corre nem ataca",
+                        "até a stamina voltar a esta fração da máxima (1.0 = barra cheia).")
+                .defineInRange("exhaustionEndsAt", 1.0, 0.0, 1.0);
+        EXHAUSTED_MOVE_SPEED = b.comment("Multiplicador da velocidade de movimento enquanto exausto (0.5 = metade).")
+                .defineInRange("exhaustedMoveSpeed", 0.5, 0.0, 1.0);
+        EXHAUSTED_BREAK_SPEED = b.comment("Multiplicador da velocidade de quebrar blocos enquanto exausto, com a mão ou qualquer",
+                        "ferramenta (aplicado sobre a velocidade final, já com Eficiência e Pressa).")
+                .defineInRange("exhaustedBreakSpeed", 0.5, 0.0, 1.0);
         b.pop();
 
         b.push("mobScaling");

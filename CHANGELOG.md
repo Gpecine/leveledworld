@@ -2,6 +2,18 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.8.2
+### Exaustão mais punitiva
+- A barra vermelha precisa **encher até o fim** para o personagem voltar a correr e atacar. Antes bastava 30%.
+- Enquanto exausto:
+  - a **velocidade de movimento cai pela metade**;
+  - a **velocidade de quebrar blocos cai pela metade**, com a mão, picareta, machado, pá ou enxada. O corte vale
+    sobre a velocidade final, já com o material da ferramenta, Eficiência I–V e Pressa, então sempre fica na metade.
+- Configurável em `[stamina]`: `exhaustionEndsAt` (1.0 = barra cheia), `exhaustedMoveSpeed` e `exhaustedBreakSpeed`
+  (0.5 = metade).
+- Novo comando de admin: `/rpg stamina drain <jogador>` zera a stamina e deixa exausto; `/rpg stamina refill <jogador>`
+  enche a barra.
+
 ## 0.8.1
 ### Árvores de perks com a silhueta da skill
 - As 15 estrelas de cada árvore agora desenham o símbolo da skill, e as linhas entre elas são os requisitos:

@@ -21,6 +21,8 @@ import net.neoforged.neoforge.common.NeoForgeMod;
 public final class AttributeService {
     private static final ResourceLocation HEALTH_MODIFIER = LeveledWorld.id("health_points");
     private static final ResourceLocation SPRINT_MODIFIER = LeveledWorld.id("stamina_sprint_speed");
+    private static final ResourceLocation EXHAUSTED_SPEED = LeveledWorld.id("exhausted_speed");
+    private static final ResourceLocation EXHAUSTED_BREAK = LeveledWorld.id("exhausted_break_speed");
     private static final ResourceLocation PERK_ARMOR = LeveledWorld.id("perk_armor");
     private static final ResourceLocation PERK_KB = LeveledWorld.id("perk_knockback_resistance");
     private static final ResourceLocation PERK_EXPLOSION_KB = LeveledWorld.id("perk_explosion_knockback");
@@ -144,7 +146,7 @@ public final class AttributeService {
 
     /**
      * Tenta gastar stamina; consome o que houver e retorna se havia o suficiente. Se zerar, o personagem fica
-     * exausto (sem correr nem atacar) até recuperar {@code exhaustionRecovery} da stamina máxima.
+     * exausto (sem correr nem atacar, andando e quebrando blocos mais devagar) até a barra encher de novo.
      */
     public static boolean useStamina(ServerPlayer player, double amount) {
         if (amount <= 0 || player.isCreative() || player.isSpectator()) return true;
@@ -171,7 +173,7 @@ public final class AttributeService {
         return enough;
     }
 
-    /** Exausto: a stamina acabou e ainda não recuperou o bastante. Sem correr nem atacar. */
+    /** Exausto: a stamina acabou e a barra ainda não encheu de novo. Sem correr nem atacar. */
     public static boolean isExhausted(ServerPlayer player) {
         return !player.isCreative() && !player.isSpectator() && LevelingService.get(player).exhausted;
     }
@@ -269,6 +271,7 @@ public final class AttributeService {
             data.setMagicka((float) Math.min(maxMagicka, data.magicka() + LWConfig.MAGICKA_REGEN_PER_SECOND.get() / 20.0));
         }
         clampResources(data);
+        applyExhaustion(player, data.exhausted);
 
         // Sincroniza a cada 2 ticks, só se mudou.
         if (player.tickCount % 2 == 0
@@ -277,6 +280,14 @@ public final class AttributeService {
             data.lastSentMagicka = data.magicka();
             RpgNetwork.syncResources(player, data.stamina(), maxStamina, data.magicka(), maxMagicka, data.exhausted);
         }
+    }
+
+    /** Exausto: anda e quebra blocos mais devagar (multiplica a velocidade final, com ferramenta e Eficiência). */
+    private static void applyExhaustion(ServerPlayer player, boolean exhausted) {
+        set(player, Attributes.MOVEMENT_SPEED, EXHAUSTED_SPEED,
+                exhausted ? LWConfig.EXHAUSTED_MOVE_SPEED.get() - 1 : 0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
+        set(player, Attributes.BLOCK_BREAK_SPEED, EXHAUSTED_BREAK,
+                exhausted ? LWConfig.EXHAUSTED_BREAK_SPEED.get() - 1 : 0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, false);
     }
 
     private static void clampResources(PlayerRpgData data) {
