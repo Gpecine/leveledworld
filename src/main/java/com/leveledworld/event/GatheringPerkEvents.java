@@ -106,32 +106,30 @@ public final class GatheringPerkEvents {
             int radius = (int) PerkStats.get(player, Stat.ORE_SENSE);
             if (radius > 0) senseOres(level, pos, state, radius, radius >= 8);
         }
-        // Veio inteiro também em minérios colocados: cada bloco da corrente passa pelo anti-farm (sem XP nem perks
-        // de drop nos colocados), então não há o que explorar.
+        // Veio e árvore inteiros valem também para blocos colocados por jogadores: cada bloco da corrente passa pelo
+        // anti-farm (sem XP nem perks de drop nos colocados), então não há o que explorar.
         if (ore) {
             int vein = (int) PerkStats.get(player, Stat.VEIN_MINE);
             if (vein > 0 && CombatState.areaAction(player) && tool.is(ItemTags.PICKAXES)) {
-                breakConnected(player, level, pos, vein, s -> s.getBlock() == state.getBlock(), false, true);
+                breakConnected(player, level, pos, vein, s -> s.getBlock() == state.getBlock(), false);
             }
         }
-        if (state.is(BlockTags.LOGS) && !placed) {
-            if (PerkStats.has(player, Stat.CHOP_HASTE)) player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 0, false, false, true));
+        if (state.is(BlockTags.LOGS)) {
+            if (PerkStats.has(player, Stat.CHOP_HASTE) && !placed) {
+                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 0, false, false, true));
+            }
             if (PerkStats.has(player, Stat.TREE_FELL) && CombatState.areaAction(player) && tool.is(ItemTags.AXES) && isTree(level, pos)) {
                 int beforeDamage = tool.getDamageValue();
-                List<BlockPos> broken = breakConnected(player, level, pos, 64, s -> s.is(BlockTags.LOGS), true, false);
+                List<BlockPos> broken = breakConnected(player, level, pos, 64, s -> s.is(BlockTags.LOGS), true);
                 if (PerkStats.has(player, Stat.FELL_FREE) && !tool.isEmpty()) tool.setDamageValue(beforeDamage);
                 if (PerkStats.has(player, Stat.AUTO_REPLANT)) NEXT_TICK.add(() -> replant(level, pos, state, broken));
             }
         }
     }
 
-    /**
-     * Quebra blocos conectados (veio de minério ou árvore) como se o jogador os quebrasse. Sem
-     * {@code includePlaced}, pula blocos colocados por jogadores (troncos de construções ao lado da árvore).
-     */
+    /** Quebra blocos conectados (veio de minério ou árvore) como se o jogador os quebrasse. */
     private static List<BlockPos> breakConnected(ServerPlayer player, ServerLevel level, BlockPos origin, int max,
-                                                 java.util.function.Predicate<BlockState> match, boolean diagonal,
-                                                 boolean includePlaced) {
+                                                 java.util.function.Predicate<BlockState> match, boolean diagonal) {
         List<BlockPos> found = new ArrayList<>();
         Set<BlockPos> seen = new HashSet<>();
         ArrayDeque<BlockPos> queue = new ArrayDeque<>();
@@ -142,7 +140,7 @@ public final class GatheringPerkEvents {
             for (int dx = -1; dx <= 1; dx++) for (int dy = -1; dy <= 1; dy++) for (int dz = -1; dz <= 1; dz++) {
                 if (!diagonal && Math.abs(dx) + Math.abs(dy) + Math.abs(dz) != 1) continue;
                 BlockPos n = p.offset(dx, dy, dz);
-                if (seen.add(n) && match.test(level.getBlockState(n)) && (includePlaced || !PlacedBlocks.isPlaced(level, n))) {
+                if (seen.add(n) && match.test(level.getBlockState(n))) {
                     found.add(n);
                     queue.add(n);
                     if (found.size() >= max) break;

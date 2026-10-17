@@ -137,6 +137,10 @@ Configurável em `[dimensions]` na config do servidor, incluindo dimensões de o
 raio de busca, faixa de level dos mobs (min/max factor), bônus de atributos por level, pontos de perk por level,
 multiplicador de XP por skill (`skillXpMultipliers`, ex.: `"mining=0.8"`), anti-farm e treinadores (`[training]`).
 
+## Arte
+Quer criar texturas, modelos, mobs ou sons para o mod? Veja o [tutorial de arte](docs/tutorial-arte.md).
+Arquivos de arte novos entram em [`arte/`](arte/).
+
 ## Download
 Os jars de todas as versões ficam em [`releases/`](releases/) e na aba **Releases** do GitHub.
 Histórico de mudanças: [CHANGELOG.md](CHANGELOG.md).

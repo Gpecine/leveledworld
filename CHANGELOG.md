@@ -2,6 +2,15 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.8.5
+- A restrição de blocos colocados por jogadores foi **retirada de todas as ações em área**. A **Derrubada** agora
+  também derruba árvores com troncos colocados à mão (a Mineração em Veio já fazia isso desde a 0.8.4).
+  - Continua valendo: para derrubar a árvore inteira, precisa haver **folhas por perto** (até 3 blocos para os lados
+    e 12 para cima). Isso evita derrubar casas e construções feitas só de troncos.
+  - Blocos colocados por jogadores ainda **não dão XP nem bônus de drop**: o anti-farm de XP continua.
+- Novo **[tutorial de arte](docs/tutorial-arte.md)**: aplicativos grátis e pagos, regras técnicas, passo a passo
+  para itens, blocos, minérios, mobs, armaduras e sons, teste ao vivo com pacote de recursos e como entregar a arte.
+
 ## 0.8.4
 ### Mineração em Veio
 - Corrigido: o veio inteiro não quebrava em **minérios colocados por jogadores**, porque a trava anti-farm também
