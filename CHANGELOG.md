@@ -2,6 +2,10 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.6.2
+- Combate (pilares de poeira) e Ferraria (supernova) também ganharam fundos em alta resolução (1600×900, saturação −8%).
+  Agora as 7 constelações usam a arte do autor.
+
 ## 0.6.1
 - Fundos da tela de constelações trocados por **imagens em alta resolução (1600×900)** fornecidas pelo autor:
   galáxia espiral (Arquearia), nebulosa azul com aglomerado (Bloqueio), nebulosa vermelha (Armadura),
