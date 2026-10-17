@@ -102,5 +102,10 @@
   "message.leveledworld.perk_unlocked": "✦ New perk: %s — %s",
   "message.leveledworld.smith_enchanted": "Your smithing skill enchanted the item!",
   "subtitles.leveledworld.level_up": "Character levels up",
-  "subtitles.leveledworld.perk_unlock": "Perk unlocked"
+  "subtitles.leveledworld.perk_unlock": "Perk unlocked",
+  "message.leveledworld.dimension_danger": "⚠ %s: enemies here are stronger!",
+  "message.leveledworld.dimension_details": "Enemies +%s levels (minimum %s) • rewards +%s%% and exclusive loot",
+  "dimension.minecraft.the_nether": "The Nether",
+  "dimension.minecraft.the_end": "The End",
+  "dimension.minecraft.overworld": "Overworld"
 }

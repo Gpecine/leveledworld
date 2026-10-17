@@ -49,6 +49,15 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 - O level fica salvo no mob — recarregar o chunk não muda nada.
 - Sem jogador por perto, usa a média de level dos jogadores da dimensão (ou 1 se não houver ninguém).
 
+### Dimensões
+| Dimensão | Mobs | Recompensas |
+|---|---|---|
+| Superfície | level normal | normais |
+| Nether | +5 levels (mínimo 10) | loot ×1,5, raridade +10, 15% de loot exclusivo do Nether |
+| End | +10 levels (mínimo 20) | loot ×2, raridade +20, 20% de loot exclusivo do End |
+
+Configurável em `[dimensions]` na config do servidor, incluindo dimensões de outros mods.
+
 ### Recompensas escaladas
 - Orbes de XP **+5% por level** do mob e drops empilháveis **+2% por level**.
 - **Loot bônus** ao matar mobs: chance de 1% por level (máx. 50%).

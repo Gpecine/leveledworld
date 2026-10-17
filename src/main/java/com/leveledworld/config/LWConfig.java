@@ -40,6 +40,9 @@ public final class LWConfig {
     public static final ModConfigSpec.DoubleValue DAMAGE_PER_LEVEL;
     public static final ModConfigSpec.DoubleValue ARMOR_PER_LEVEL;
 
+    // Dimensões
+    public static final ModConfigSpec.ConfigValue<java.util.List<? extends String>> DIMENSION_RULES;
+
     // Recompensas
     public static final ModConfigSpec.DoubleValue XP_PER_LEVEL;
     public static final ModConfigSpec.DoubleValue DROPS_PER_LEVEL;
@@ -113,6 +116,21 @@ public final class LWConfig {
                 .defineInRange("damagePerLevel", 0.03, 0.0, 10.0);
         ARMOR_PER_LEVEL = b.comment("Pontos de armadura somados por level acima do 1.")
                 .defineInRange("armorPerLevel", 0.2, 0.0, 10.0);
+        b.pop();
+
+        b.push("dimensions");
+        DIMENSION_RULES = b.comment(
+                        "Dificuldade e recompensas por dimensão. Formato de cada entrada:",
+                        "  \"dimensão,bônusDeLevel,levelMínimo,bônusDeLoot,multiplicadorDeRecompensa,chanceExclusiva\"",
+                        "bônusDeLevel: somado ao level dos mobs | levelMínimo: piso do level dos mobs",
+                        "bônusDeLoot: somado ao level usado para escolher a raridade do loot bônus",
+                        "multiplicadorDeRecompensa: multiplica a chance de loot bônus e as orbes de XP",
+                        "chanceExclusiva: chance de rolar a tabela data/leveledworld/loot_table/dimension/<ns>/<dimensão>.json",
+                        "Dimensões que não estão na lista usam os valores normais. Funciona com dimensões de outros mods.")
+                .defineListAllowEmpty("rules",
+                        java.util.List.of("minecraft:the_nether,5,10,10,1.5,0.15", "minecraft:the_end,10,20,20,2.0,0.20"),
+                        () -> "minecraft:the_nether,5,10,10,1.5,0.15",
+                        com.leveledworld.mob.DimensionRules::isValid);
         b.pop();
 
         b.push("rewards");

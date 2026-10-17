@@ -39,7 +39,7 @@ public final class MobRewardEvents {
         if (!(event.getEntity() instanceof Mob mob)) return;
         int level = MobScaling.getLevel(mob);
         if (level <= 1) return;
-        double multiplier = 1.0 + (level - 1) * LWConfig.XP_PER_LEVEL.get();
+        double multiplier = (1.0 + (level - 1) * LWConfig.XP_PER_LEVEL.get()) * DimensionRules.of(mob.level()).rewardMultiplier();
         event.setDroppedExperience((int) Math.round(event.getDroppedExperience() * multiplier));
     }
 
@@ -68,12 +68,7 @@ public final class MobRewardEvents {
         if (killer == null && event.getSource().getEntity() instanceof Player p) killer = p;
         if (killer == null) return;
 
-        double chance = Math.min(LWConfig.BONUS_LOOT_MAX_CHANCE.get(), mobLevel * LWConfig.BONUS_LOOT_CHANCE_PER_LEVEL.get());
-        if (mob.getRandom().nextDouble() >= chance) return;
-
-        Tier tier = mobLevel >= LWConfig.RARE_LOOT_LEVEL.get() ? Tier.RARE
-                : mobLevel >= LWConfig.UNCOMMON_LOOT_LEVEL.get() ? Tier.UNCOMMON : Tier.COMMON;
-        LootTable table = level.getServer().reloadableRegistries().getLootTable(tier.table);
+        DimensionRules.Rule rule = DimensionRules.of(level);
         LootParams params = new LootParams.Builder(level)
                 .withParameter(LootContextParams.THIS_ENTITY, mob)
                 .withParameter(LootContextParams.ORIGIN, mob.position())
@@ -83,17 +78,43 @@ public final class MobRewardEvents {
                 .withLuck(killer.getLuck())
                 .create(LootContextParamSets.ENTITY);
 
+        // Loot bônus por raridade; dimensões perigosas aumentam a chance e o "level de loot".
+        int lootLevel = mobLevel + rule.lootLevelBonus();
+        double chance = Math.min(LWConfig.BONUS_LOOT_MAX_CHANCE.get(),
+                lootLevel * LWConfig.BONUS_LOOT_CHANCE_PER_LEVEL.get() * rule.rewardMultiplier());
+        if (mob.getRandom().nextDouble() < chance) {
+            Tier tier = lootLevel >= LWConfig.RARE_LOOT_LEVEL.get() ? Tier.RARE
+                    : lootLevel >= LWConfig.UNCOMMON_LOOT_LEVEL.get() ? Tier.UNCOMMON : Tier.COMMON;
+            boolean dropped = drop(event, level, mob, level.getServer().reloadableRegistries().getLootTable(tier.table),
+                    params, tier != Tier.COMMON);
+            if (dropped && tier == Tier.RARE) {
+                level.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
+                        SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.NEUTRAL, 1.5F, 1.2F);
+            }
+        }
+
+        // Loot exclusivo da dimensão (Nether, End ou de outros mods, se houver tabela).
+        if (rule.exclusiveChance() > 0 && mob.getRandom().nextDouble() < rule.exclusiveChance()) {
+            LootTable exclusive = level.getServer().reloadableRegistries()
+                    .getLootTable(DimensionRules.exclusiveTable(level.dimension().location()));
+            if (drop(event, level, mob, exclusive, params, true)) {
+                level.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
+                        SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.NEUTRAL, 1.2F, 0.8F);
+            }
+        }
+    }
+
+    /** Rola a tabela e adiciona os itens aos drops; retorna se caiu algo. */
+    private static boolean drop(LivingDropsEvent event, ServerLevel level, Mob mob, LootTable table,
+                                LootParams params, boolean glow) {
         List<ItemStack> loot = new ArrayList<>(table.getRandomItems(params));
         for (ItemStack stack : loot) {
             ItemEntity entity = new ItemEntity(level, mob.getX(), mob.getY() + 0.5, mob.getZ(), stack);
             entity.setDefaultPickUpDelay();
-            if (tier != Tier.COMMON) entity.setGlowingTag(true);  // destaca loot incomum/raro
+            if (glow) entity.setGlowingTag(true);  // destaca loot incomum/raro/exclusivo
             event.getDrops().add(entity);
         }
-        if (!loot.isEmpty() && tier == Tier.RARE) {
-            level.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
-                    SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.NEUTRAL, 1.5F, 1.2F);
-        }
+        return !loot.isEmpty();
     }
 
     private enum Tier {

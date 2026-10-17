@@ -2,6 +2,20 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.7.0
+### Dificuldade e loot por dimensão
+| Dimensão | Level dos mobs | Mínimo | Raridade do loot | Chance de loot e XP | Loot exclusivo |
+|---|---|---|---|---|---|
+| Superfície | normal | — | normal | ×1 | — |
+| **Nether** | +5 | 10 | +10 níveis | ×1,5 | 15%: quartzo, ouro, blaze rod, glowstone, nether wart, magma cream, lágrima de ghast, espada de ouro encantada, ancient debris, netherite scrap |
+| **End** | +10 | 20 | +20 níveis | ×2 | 20%: ender pearl, diamante, frascos de XP, chorus, livro encantado, shulker shell, dragon breath, espada/elmo de diamante encantados, end crystal |
+- "Raridade do loot" soma ao level usado para escolher comum/incomum/raro: no Nether o loot incomum aparece bem mais cedo e no End o raro.
+- Loot exclusivo brilha e toca um som próprio.
+- Aviso ao entrar numa dimensão perigosa, com o bônus de level e de recompensas.
+- Tudo configurável em `[dimensions] rules` de `leveledworld-server.toml`, inclusive para **dimensões de outros mods**
+  (formato `dimensão,bônusDeLevel,levelMínimo,bônusDeLoot,multiplicadorDeRecompensa,chanceExclusiva`). Para dar loot
+  exclusivo a uma dimensão nova, basta um datapack com `data/leveledworld/loot_table/dimension/<namespace>/<dimensão>.json`.
+
 ## 0.6.2
 - Combate (pilares de poeira) e Ferraria (supernova) também ganharam fundos em alta resolução (1600×900, saturação −8%).
   Agora as 7 constelações usam a arte do autor.

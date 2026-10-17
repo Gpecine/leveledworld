@@ -31,7 +31,9 @@ public final class MobScaling {
         double min = LWConfig.MOB_LEVEL_MIN_FACTOR.get();
         double max = Math.max(min, LWConfig.MOB_LEVEL_MAX_FACTOR.get());
         double factor = min + mob.getRandom().nextDouble() * (max - min);
-        int mobLevel = (int) Math.round(base * factor);
+        DimensionRules.Rule rule = DimensionRules.of(level);
+        int mobLevel = (int) Math.round(base * factor) + rule.levelBonus();
+        mobLevel = Math.max(mobLevel, rule.minLevel());
         if (isBoss(mob)) mobLevel = Math.max(mobLevel, LWConfig.BOSS_MIN_LEVEL.get());
         return Mth.clamp(mobLevel, 1, LWConfig.MOB_MAX_LEVEL.get());
     }

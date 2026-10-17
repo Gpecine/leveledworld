@@ -102,5 +102,10 @@
   "message.leveledworld.perk_unlocked": "✦ Novo perk: %s — %s",
   "message.leveledworld.smith_enchanted": "Sua habilidade de ferreiro encantou o item!",
   "subtitles.leveledworld.level_up": "Personagem sobe de level",
-  "subtitles.leveledworld.perk_unlock": "Perk desbloqueado"
+  "subtitles.leveledworld.perk_unlock": "Perk desbloqueado",
+  "message.leveledworld.dimension_danger": "⚠ %s: os inimigos aqui são mais fortes!",
+  "message.leveledworld.dimension_details": "Inimigos +%s níveis (mínimo %s) • recompensas +%s%% e loot exclusivo",
+  "dimension.minecraft.the_nether": "Nether",
+  "dimension.minecraft.the_end": "End",
+  "dimension.minecraft.overworld": "Superfície"
 }
