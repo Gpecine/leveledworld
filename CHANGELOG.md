@@ -2,6 +2,16 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.6.0
+### Fundos de espaço na tela de constelações
+- Cada skill tem sua própria região do espaço como fundo, gerada de forma procedural e original (`tools/gen_skybox.py`):
+  - Combate: **pilares de poeira** (inspirados nos Pilares da Criação)
+  - Arquearia: galáxia espiral · Bloqueio: nebulosa azul com aglomerado · Armadura: nebulosa de emissão vermelha
+  - Mineração: nuvem de poeira dourada · Lenhador: nebulosa planetária verde · Ferraria: remanescente de supernova
+- Ao girar o carrossel, o fundo desliza com parallax e se funde suavemente com o da próxima skill (o fundo segue o
+  carrossel com um leve atraso, então nada "salta" mesmo arrastando rápido). O fundo também deriva lentamente parado.
+- Animações da tela agora independentes do FPS.
+
 ## 0.5.0
 ### Perks por skill (constelações)
 - Cada skill tem **4 perks** desbloqueados automaticamente nos níveis 25, 50, 75 e 100:

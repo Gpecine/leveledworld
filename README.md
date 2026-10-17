@@ -59,7 +59,7 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 
 ### Interface
 - **HUD**: painel dourado com medalhão de level, barras de XP (dourada), stamina (verde) e mana (azul), e selo `+N` de pontos livres. Aviso de **LEVEL UP** ao subir.
-- **Tecla `K`**: céu de constelações (uma por skill) para girar arrastando, com os perks de cada skill, e o painel do personagem com Mana / Vida / Stamina e botões "+" para gastar pontos.
+- **Tecla `K`**: céu de constelações (uma por skill, cada uma com sua região do espaço como fundo) para girar arrastando, com os perks de cada skill, e o painel do personagem com Mana / Vida / Stamina e botões "+" para gastar pontos.
 - **Placa nos mobs**: medalhão com o level + nome + barra de vida. A cor do medalhão indica a dificuldade
   em relação a você: cinza (muito mais fraco), verde, dourado (equivalente), laranja, vermelho com ☠ (muito mais forte).
   Configurável em `config/leveledworld-client.toml` (ligar/desligar, distância, barra de vida).

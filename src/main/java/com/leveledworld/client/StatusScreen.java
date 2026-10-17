@@ -52,6 +52,9 @@ public class StatusScreen extends Screen {
     private final float[][] backgroundStars;
     private float scrollTarget;
     private float scroll;
+    /** Posição do fundo: segue {@link #scroll} mais devagar, para a troca de cenário ser suave. */
+    private float skyScroll;
+    private long lastFrameNanos;
     private boolean dragging;
     private double dragDistance;
     private double pressX;
@@ -129,23 +132,26 @@ public class StatusScreen extends Screen {
     private void renderSkyScenes(GuiGraphics g) {
         int near = -1, far = -1;
         for (int i = 0; i < SKILLS.length; i++) {
-            float ad = Math.abs(offset(i));
+            float ad = Math.abs(skyOffset(i));
             if (ad >= 1f) continue;
-            if (near < 0 || ad < Math.abs(offset(near))) { far = near; near = i; }
-            else if (far < 0 || ad < Math.abs(offset(far))) far = i;
+            if (near < 0 || ad < Math.abs(skyOffset(near))) { far = near; near = i; }
+            else if (far < 0 || ad < Math.abs(skyOffset(far))) far = i;
         }
         if (far >= 0) drawSky(g, far, 1f);
-        if (near >= 0) drawSky(g, near, far >= 0 ? Mth.clamp(1f - Math.abs(offset(near)), 0f, 1f) : 1f);
+        if (near >= 0) {
+            float t = far >= 0 ? Mth.clamp(1f - Math.abs(skyOffset(near)), 0f, 1f) : 1f;
+            drawSky(g, near, t * t * (3f - 2f * t));  // smoothstep: começo e fim da mistura suaves
+        }
     }
 
     private void drawSky(GuiGraphics g, int skill, float alpha) {
-        float d = offset(skill);
+        float d = skyOffset(skill);
         float time = (System.currentTimeMillis() % 600000) / 1000f;
-        float zoom = 1.18f + 0.06f * Math.abs(d);
+        float zoom = 1.16f + 0.04f * Math.abs(d);
         int w = Math.round(width * zoom);
         int h = Math.round(height * zoom);
         float drift = Mth.sin(time * 0.07f + skill) * width * 0.015f;  // deriva lenta, "respirando"
-        float x = (width - w) / 2f - d * width * 0.12f + drift;
+        float x = (width - w) / 2f - d * width * 0.08f + drift;
         float y = (height - h) / 2f;
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
@@ -158,8 +164,13 @@ public class StatusScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        // Animação independente do FPS (desaceleração exponencial).
+        long now = System.nanoTime();
+        float dt = lastFrameNanos == 0 ? 0f : Math.min(0.1f, (now - lastFrameNanos) / 1e9f);
+        lastFrameNanos = now;
+        scroll = dragging ? scrollTarget : approach(scroll, scrollTarget, 9f, dt);
+        skyScroll = approach(skyScroll, scroll, 3.2f, dt);
         renderBackground(g, mouseX, mouseY, partialTick);
-        scroll += (scrollTarget - scroll) * (dragging ? 1f : 0.22f);
 
         SyncRpgDataPayload data = ClientRpgData.get();
         g.drawCenteredString(font, title.copy().withStyle(ChatFormatting.BOLD), width / 2, 7, RpgUi.GOLD_LIGHT);
@@ -211,10 +222,23 @@ public class StatusScreen extends Screen {
         return hovered;
     }
 
+    private static float approach(float current, float target, float rate, float dt) {
+        return current + (target - current) * (1f - (float) Math.exp(-rate * dt));
+    }
+
     /** Distância (em "slots") da skill i até o centro do carrossel, com volta circular. */
     private float offset(int i) {
+        return wrapOffset(i - scroll);
+    }
+
+    /** Mesma distância, mas usando a posição (mais lenta) do fundo. */
+    private float skyOffset(int i) {
+        return wrapOffset(i - skyScroll);
+    }
+
+    private static float wrapOffset(float raw) {
         float n = SKILLS.length;
-        float d = i - scroll;
+        float d = raw;
         d = ((d % n) + n) % n;
         if (d > n / 2f) d -= n;
         return d;
