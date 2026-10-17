@@ -49,6 +49,29 @@ public final class RpgHud {
         }
 
         renderLevelUpBanner(g, font);
+        renderStealthEye(g);
+    }
+
+    /** Olho acima da mira quando agachado: fechado (oculto), entreaberto (alerta) ou aberto (detectado). */
+    private static void renderStealthEye(GuiGraphics g) {
+        int state = ClientRpgData.stealth();
+        if (state < 0) return;
+        int cx = g.guiWidth() / 2;
+        int cy = g.guiHeight() / 2 - 16;
+        int color = state == 2 ? 0xFFE04848 : state == 1 ? 0xFFE8C050 : 0xFFB8B8C8;
+        int open = state == 2 ? 3 : state == 1 ? 2 : 0;  // meia-altura da abertura do olho
+        int[] widths = {11, 9, 7, 5};
+        g.fill(cx - 12, cy - 1, cx + 13, cy + 1, 0x60000000);
+        for (int dy = -open; dy <= open; dy++) {
+            int w = widths[Math.min(3, Math.abs(dy))];
+            g.fill(cx - w, cy + dy, cx + w + 1, cy + dy + 1, RpgUi.fade(color, 0.9f));
+        }
+        if (open == 0) {
+            g.fill(cx - 11, cy, cx + 12, cy + 1, color);
+            for (int k = -8; k <= 8; k += 4) g.fill(cx + k, cy + 1, cx + k + 1, cy + 3, color);  // cílios
+        } else {
+            g.fill(cx - 1, cy - Math.min(open, 2), cx + 2, cy + Math.min(open, 2) + 1, 0xFF101018);  // pupila
+        }
     }
 
     private static void renderLevelUpBanner(GuiGraphics g, Font font) {

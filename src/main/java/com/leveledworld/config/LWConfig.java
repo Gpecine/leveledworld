@@ -12,6 +12,14 @@ public final class LWConfig {
     public static final ModConfigSpec.IntValue SKILL_MAX_LEVEL;
     public static final ModConfigSpec.IntValue MAX_PLAYER_LEVEL;
     public static final ModConfigSpec.DoubleValue CHARACTER_XP_PER_SKILL_LEVEL;
+    public static final ModConfigSpec.IntValue PERK_POINTS_PER_LEVEL;
+    public static final ModConfigSpec.ConfigValue<java.util.List<? extends String>> SKILL_XP_MULTIPLIERS;
+    public static final ModConfigSpec.DoubleValue SPAWNER_XP_MULTIPLIER;
+    public static final ModConfigSpec.BooleanValue TRACK_PLACED_BLOCKS;
+
+    // Treinadores e livros
+    public static final ModConfigSpec.IntValue TRAININGS_PER_LEVEL;
+    public static final ModConfigSpec.BooleanValue TRAINER_TRADES;
 
     // Atributos
     public static final ModConfigSpec.IntValue POINTS_PER_LEVEL;
@@ -61,10 +69,28 @@ public final class LWConfig {
                 .defineInRange("skillStartLevel", 15, 1, 100);
         SKILL_MAX_LEVEL = b.comment("Level máximo de cada skill.")
                 .defineInRange("skillMaxLevel", 100, 1, 1000);
-        MAX_PLAYER_LEVEL = b.comment("Level máximo do personagem.")
-                .defineInRange("maxPlayerLevel", 100, 1, 1000);
+        MAX_PLAYER_LEVEL = b.comment("Level máximo do personagem (skills lendárias permitem continuar evoluindo).")
+                .defineInRange("maxCharacterLevel", 250, 1, 10000);
+        PERK_POINTS_PER_LEVEL = b.comment("Pontos de perk ganhos a cada level do personagem.")
+                .defineInRange("perkPointsPerLevel", 1, 0, 100);
+        SKILL_XP_MULTIPLIERS = b.comment("Multiplicador de XP por skill, no formato \"skill=multiplicador\" (ex.: \"mining=0.8\").",
+                        "Skills: one_handed, two_handed, archery, block, heavy_armor, light_armor, sneak, athletics,",
+                        "mining, woodcutting, smithing, farming. Skills fora da lista usam 1.0.")
+                .defineListAllowEmpty("skillXpMultipliers", java.util.List.of(), () -> "mining=1.0",
+                        o -> o instanceof String str && str.contains("="));
+        SPAWNER_XP_MULTIPLIER = b.comment("XP de combate ao lutar com mobs nascidos de spawners (anti-farm).")
+                .defineInRange("spawnerXpMultiplier", 0.25, 0.0, 1.0);
+        TRACK_PLACED_BLOCKS = b.comment("Troncos e minérios colocados por jogadores não dão XP de skill (anti-farm).")
+                .define("trackPlacedBlocks", true);
         CHARACTER_XP_PER_SKILL_LEVEL = b.comment("XP de personagem ganho a cada level de skill = novo level da skill × este valor.")
                 .defineInRange("characterXpPerSkillLevel", 0.75, 0.0, 100.0);
+        b.pop();
+
+        b.push("training");
+        TRAININGS_PER_LEVEL = b.comment("Lições de treinador (aldeões) que podem ser usadas por level do personagem.")
+                .defineInRange("trainingsPerLevel", 5, 0, 100);
+        TRAINER_TRADES = b.comment("Aldeões vendem lições de skill.")
+                .define("trainerTrades", true);
         b.pop();
 
         b.push("attributes");

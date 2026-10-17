@@ -6,27 +6,58 @@ o personagem evolui usando skills, e **o mundo inteiro escala com o seu level** 
 ## Como funciona
 
 ### Skills (sobem com o uso)
-| Skill | Como ganhar XP |
-|---|---|
-| Combate | causar dano corpo-a-corpo |
-| Arquearia | acertar projéteis (arco, besta, tridente) |
-| Bloqueio | bloquear ataques com escudo |
-| Armadura | receber dano de criaturas usando armadura (mais peças = mais XP) |
-| Mineração | quebrar minérios (muito) e pedra (pouco) |
-| Lenhador | cortar troncos |
-| Ferraria | fabricar armas, ferramentas, armaduras e escudos |
+12 skills em 3 grupos:
+
+| Grupo | Skill | Como ganhar XP |
+|---|---|---|
+| Guerreiro | Uma Mão | dano com espadas e armas de uma mão |
+| Guerreiro | Duas Mãos | dano com machados, maça e tridente |
+| Guerreiro | Arquearia | acertar projéteis (arco, besta, tridente) |
+| Guerreiro | Bloqueio | bloquear ataques com escudo |
+| Guerreiro | Armadura Pesada | receber dano usando ferro, diamante ou netherite |
+| Ladrão | Armadura Leve | receber dano usando couro, malha, ouro, tartaruga ou tatu |
+| Ladrão | Furtividade | ficar agachado perto de mobs sem ser visto e dar ataques furtivos |
+| Ladrão | Atletismo | correr, nadar, escalar, pular e sobreviver a quedas |
+| Artesão | Mineração | quebrar minérios (cada minério vale diferente) e pedra |
+| Artesão | Lenhador | cortar troncos |
+| Artesão | Ferraria | fabricar e reparar na bigorna |
+| Artesão | Agricultura | colher plantações maduras, reproduzir animais e pescar |
 
 - Toda skill começa no level **15** e vai até **100**.
 - XP para o próximo level da skill: `0.5 × level^1.95 + 10`.
+- XP de combate escala com a dificuldade do mob (`level do mob / seu level`, entre ×0,5 e ×2).
+- **Anti-farm**: mobs de spawner dão 25% do XP; troncos e minérios colocados por jogadores e minérios quebrados com
+  Toque de Seda não dão XP.
 
 ### Level do personagem
 - Cada vez que uma skill sobe, o personagem ganha XP igual a 75% do novo level da skill.
-- XP para o próximo level do personagem: `(level + 3) × 25`.
+- XP para o próximo level do personagem: `(level + 3) × 25` (máximo configurável, padrão 250).
 - Persiste ao morrer.
 
-### Perks (constelações)
-Cada skill desbloqueia 4 perks nos níveis 25, 50, 75 e 100 — veja a lista completa no [CHANGELOG](CHANGELOG.md#050)
-ou passe o mouse sobre as estrelas grandes na tela **K**.
+### Perks (árvores de constelação)
+- Cada level do personagem dá **1 ponto de perk**.
+- Cada skill tem uma árvore com **15 perks** (180 no total), alguns com vários ranks. Para comprar, é preciso ter o
+  level de skill exigido e o perk anterior na árvore.
+- Na tela **K**, selecione uma skill no carrossel para ver a árvore. Passe o mouse para ver os detalhes e clique para aprender.
+- **Skill lendária**: no level 100, o botão "Tornar Lendária" volta a skill ao level 15 e devolve os pontos de perk
+  dela. A skill ganha uma ★ e pode subir de novo, dando mais XP de personagem.
+
+### Livros de skill e treinadores
+- **Tomos de skill** aparecem em baús (masmorras, templos, fortalezas, cidades antigas...) e na pesca. Cada tomo dá +1 level
+  numa skill aleatória. Os tomos "Antigos" são raros e dão +2.
+- **Aldeões treinam skills** em troca de esmeraldas (5 por level de personagem, configurável):
+
+| Profissão | Skills |
+|---|---|
+| Armeiro | Uma Mão, Duas Mãos |
+| Fabricante de armaduras | Armadura Pesada, Armadura Leve, Bloqueio |
+| Flecheiro | Arquearia |
+| Ferramenteiro | Mineração, Lenhador, Ferraria |
+| Fazendeiro / Açougueiro | Agricultura |
+| Cartógrafo | Atletismo |
+| Mercador ambulante | Furtividade |
+
+  O level máximo que um aldeão ensina depende do nível dele (de novato a mestre: 25 / 40 / 55 / 65 / 75).
 
 ### Atributos (Vida / Stamina / Mana)
 Cada level do personagem dá **1 ponto** para investir na tela **K**:
@@ -68,7 +99,10 @@ Configurável em `[dimensions]` na config do servidor, incluindo dimensões de o
 
 ### Interface
 - **HUD**: painel dourado com medalhão de level, barras de XP (dourada), stamina (verde) e mana (azul), e selo `+N` de pontos livres. Aviso de **LEVEL UP** ao subir.
-- **Tecla `K`**: céu de constelações (uma por skill, cada uma com sua região do espaço como fundo) para girar arrastando, com os perks de cada skill, e o painel do personagem com Mana / Vida / Stamina e botões "+" para gastar pontos.
+- **Tecla `K`**: céu de constelações (uma por skill, cada uma com sua região do espaço como fundo) para girar arrastando.
+  A skill selecionada mostra sua árvore de perks. Embaixo fica o painel do personagem, com Mana / Vida / Stamina,
+  botões "+" para gastar pontos e os selos de pontos de atributo (dourado) e de perk (roxo).
+- **Olho de furtividade** acima da mira quando agachado: fechado (oculto), entreaberto (alguém desconfia) ou aberto (visto).
 - **Placa nos mobs**: medalhão com o level + nome + barra de vida. A cor do medalhão indica a dificuldade
   em relação a você: cinza (muito mais fraco), verde, dourado (equivalente), laranja, vermelho com ☠ (muito mais forte).
   Configurável em `config/leveledworld-client.toml` (ligar/desligar, distância, barra de vida).
@@ -81,11 +115,14 @@ Configurável em `[dimensions]` na config do servidor, incluindo dimensões de o
 | `/rpg skill set <jogador> <skill> <level>` | OP |
 | `/rpg skill addxp <jogador> <skill> <xp>` | OP |
 | `/rpg points add <jogador> <n>` / `/rpg points reset <jogador>` | OP |
+| `/rpg perks reset <jogador>` / `/rpg perks points <jogador> <n>` (adiciona pontos) | OP |
+| `/rpg tome <jogador> <skill> [levels]` — dá um tomo de skill | OP |
 | `/rpg mob <entidade>` — mostra o level de um mob | OP |
 
 ## Configuração
 `config/leveledworld-server.toml` (pode ser sobrescrito por mundo em `saves/<mundo>/serverconfig/`) — multiplicador de XP, levels máximos,
-raio de busca, faixa de level dos mobs (min/max factor) e bônus de atributos por level.
+raio de busca, faixa de level dos mobs (min/max factor), bônus de atributos por level, pontos de perk por level,
+multiplicador de XP por skill (`skillXpMultipliers`, ex.: `"mining=0.8"`), anti-farm e treinadores (`[training]`).
 
 ## Download
 Os jars de todas as versões ficam em [`releases/`](releases/) e na aba **Releases** do GitHub.
@@ -106,7 +143,6 @@ Roteiro de teste rápido:
 
 ## Próximos passos (ideias)
 - Sistema de magias usando a mana.
-- Bônus de dificuldade por dimensão (Nether/End).
 
 ## Publicar uma nova versão
 1. Altere `mod_version` em `gradle.properties` e adicione a seção no `CHANGELOG.md`.

@@ -124,6 +124,11 @@
           "type": "minecraft:item",
           "name": "minecraft:netherite_scrap",
           "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "leveledworld:skill_tome",
+          "weight": 5
         }
       ]
     }

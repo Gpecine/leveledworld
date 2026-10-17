@@ -132,6 +132,11 @@
               }
             }
           ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "leveledworld:skill_tome",
+          "weight": 10
         }
       ]
     }

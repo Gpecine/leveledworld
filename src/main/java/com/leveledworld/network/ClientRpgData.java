@@ -22,6 +22,14 @@ public final class ClientRpgData {
             levelUpLevel = data.level();
         }
         current = data;
+        stats = com.leveledworld.skill.PerkStats.compute(data.perks());
+    }
+
+    private static volatile double[] stats = new double[com.leveledworld.skill.Stat.values().length];
+
+    /** Stat dos perks do jogador local (para efeitos que o cliente precisa prever). */
+    public static double stat(com.leveledworld.skill.Stat stat) {
+        return stats[stat.ordinal()];
     }
 
     /** Momento (ms) do último level up visto pelo cliente; 0 se nenhum. */
@@ -41,10 +49,23 @@ public final class ClientRpgData {
         resources = data;
     }
 
+    private static volatile int stealth = -1;
+
+    /** Estado de furtividade: -1 = não agachado, 0 = oculto, 1 = alerta, 2 = detectado. */
+    public static int stealth() {
+        return stealth;
+    }
+
+    static void setStealth(int state) {
+        stealth = state;
+    }
+
     public static void clear() {
         current = null;
         resources = null;
+        stealth = -1;
         levelUpAt = 0;
+        stats = new double[com.leveledworld.skill.Stat.values().length];
     }
 
     private ClientRpgData() {}

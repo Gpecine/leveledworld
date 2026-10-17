@@ -2,6 +2,67 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.8.0 — Skills 2.0
+### 12 skills
+- **Combate** virou **Uma Mão** (espadas) e **Duas Mãos** (machados, maça, tridente).
+- **Armadura** virou **Armadura Pesada** (ferro, diamante, netherite) e **Armadura Leve** (couro, malha, ouro, tartaruga, tatu).
+  Armaduras de outros mods são classificadas pela defesa do peitoral.
+- Skills novas: **Furtividade**, **Atletismo** e **Agricultura**.
+- As skills estão agrupadas em Guerreiro, Ladrão e Artesão. As 5 novas constelações têm símbolos e fundos próprios,
+  com as imagens do autor: Duas Mãos, Furtividade, Atletismo, Armadura Leve e Agricultura.
+
+### Árvores de perks com pontos
+- **180 perks** (15 por skill), muitos com vários ranks. Cada level de personagem dá **1 ponto de perk**.
+  Para comprar um perk, é preciso ter o level de skill exigido e o perk anterior na árvore.
+- A árvore aparece sobre a constelação da skill selecionada, com estrelas em 5 estados: comprado, no máximo,
+  disponível, falta level e bloqueado. Tooltip com o efeito de cada rank e popup de confirmação.
+- Destaques:
+  - Uma Mão: críticos, sangramento e execução.
+  - Duas Mãos: golpe em área, penetração de armadura e ataque carregado.
+  - Arquearia: disparo duplo, chuva de flechas e flecha paralisante.
+  - Bloqueio: Refletir/Espinhos, golpe de escudo e Fortaleza Imortal.
+  - Armadura Pesada: Juggernaut, Colosso (+vida) e Imparável.
+  - Armadura Leve: esquiva, rolamento e esquiva de projéteis.
+  - Furtividade: ataque furtivo até ×3, Desaparecer, Fantasma, e Endermen e sculk que ignoram você.
+  - Atletismo: corrida, pulo, queda, natação, escalada e Segundo Fôlego.
+  - Mineração: Faro de Minério (realça minérios próximos), mineração em veio, fundição automática e gemas.
+  - Lenhador: derrubar árvore inteira, replantio automático e Pomar Dourado.
+  - Ferraria: itens forjados com **qualidade** (Fino / Superior / Obra-prima, com assinatura), reciclagem e bigorna mais barata.
+  - Agricultura: replantio, colheita em área, aura de crescimento, gêmeos na reprodução e Safra Dourada.
+- Novo efeito **Sangramento**.
+- Na tela K aparecem os selos de pontos de atributo (dourado) e de pontos de perk (roxo).
+
+### Skills lendárias
+- No level 100, o botão **Tornar Lendária** volta a skill ao level 15, devolve os pontos de perk dela e dá uma ★.
+  A skill pode subir de novo e continuar dando XP de personagem.
+- O level máximo do personagem agora é configurável (`maxCharacterLevel`, padrão 250).
+
+### Livros de skill e treinadores
+- **Tomos de skill** em baús de masmorras, templos, fortalezas, cidades antigas, bastiões, End City e na pesca:
+  +1 level numa skill sorteada. Os tomos "Antigos" são raros e dão +2.
+- **Aldeões treinam skills** em troca de esmeraldas, até um level que depende do nível do aldeão (25–75).
+  O mercador ambulante ensina Furtividade. O limite é de 5 lições por level de personagem.
+
+### XP balanceado e anti-farm
+- O XP de combate escala com a dificuldade do mob (×0,5 a ×2) e matar um mob dá um bônus.
+- Cada minério dá um XP diferente; Toque de Seda não dá XP.
+- Mobs de spawner dão 25% do XP. Troncos e minérios colocados por jogadores não dão XP.
+- Multiplicador de XP por skill na config (`skillXpMultipliers`).
+
+### Interface
+- Olho de furtividade acima da mira quando agachado: fechado (oculto), entreaberto ou aberto (visto).
+- Mensagem "Ataque furtivo! ×N" na barra de ação.
+
+### Migração de mundos antigos
+- A antiga skill Armadura vira Armadura Pesada e Armadura Leve com o mesmo level.
+- Os 4 perks automáticos antigos foram substituídos pelas árvores. Personagens existentes recebem `(level − 1)` pontos de perk.
+
+### Comandos
+- `/rpg perks reset <jogador>`, `/rpg perks points <jogador> <n>`, `/rpg tome <jogador> <skill> [levels]`.
+
+> Os perks são definidos em código (`skill/PerkTrees.java`), não em JSON como o plano previa: assim fica mais fácil
+> validar a árvore e o layout.
+
 ## 0.7.0
 ### Dificuldade e loot por dimensão
 | Dimensão | Level dos mobs | Mínimo | Raridade do loot | Chance de loot e XP | Loot exclusivo |

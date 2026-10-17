@@ -2,15 +2,34 @@ package com.leveledworld.skill;
 
 import java.util.Locale;
 
-/** Skills que evoluem com o uso, no estilo Skyrim. */
+/** As 12 skills, divididas nos grupos Guerreiro, Ladrão e Artesão (ordem do carrossel). */
 public enum Skill {
-    ONE_HANDED,   // ataques corpo-a-corpo
-    ARCHERY,      // projéteis (arco, besta, tridente)
-    BLOCK,        // bloquear com escudo
-    ARMOR,        // receber dano usando armadura
-    MINING,       // minerar pedra e minérios
-    WOODCUTTING,  // cortar troncos
-    SMITHING;     // fabricar armas, ferramentas e armaduras
+    ONE_HANDED(Group.WARRIOR),   // espadas
+    TWO_HANDED(Group.WARRIOR),   // machados, maça, tridente corpo a corpo
+    ARCHERY(Group.WARRIOR),      // arco, besta, tridente arremessado
+    BLOCK(Group.WARRIOR),        // escudo
+    HEAVY_ARMOR(Group.WARRIOR),  // ferro, diamante, netherite
+    LIGHT_ARMOR(Group.THIEF),    // couro, cota de malha, ouro, tartaruga
+    SNEAK(Group.THIEF),          // furtividade
+    ATHLETICS(Group.THIEF),      // correr, nadar, pular, escalar
+    MINING(Group.CRAFTSMAN),
+    WOODCUTTING(Group.CRAFTSMAN),
+    SMITHING(Group.CRAFTSMAN),
+    FARMING(Group.CRAFTSMAN);
+
+    public enum Group {
+        WARRIOR, THIEF, CRAFTSMAN;
+
+        public String translationKey() {
+            return "skill_group.leveledworld." + name().toLowerCase(Locale.ROOT);
+        }
+    }
+
+    public final Group group;
+
+    Skill(Group group) {
+        this.group = group;
+    }
 
     public String id() {
         return name().toLowerCase(Locale.ROOT);

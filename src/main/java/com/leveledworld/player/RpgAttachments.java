@@ -25,5 +25,15 @@ public final class RpgAttachments {
                     .serialize(Codec.INT)
                     .build());
 
+    /** Mob nascido de spawner (XP de combate reduzido). */
+    public static final Supplier<AttachmentType<Boolean>> FROM_SPAWNER = ATTACHMENT_TYPES.register("from_spawner",
+            () -> AttachmentType.builder(() -> false).serialize(Codec.BOOL).build());
+
+    /** Blocos (troncos/minérios) colocados por jogadores neste chunk. */
+    public static final Supplier<AttachmentType<it.unimi.dsi.fastutil.longs.LongOpenHashSet>> PLACED_BLOCKS =
+            ATTACHMENT_TYPES.register("placed_blocks",
+                    () -> AttachmentType.builder(() -> new it.unimi.dsi.fastutil.longs.LongOpenHashSet())
+                            .serialize(PlacedBlocks.CODEC).build());
+
     private RpgAttachments() {}
 }

@@ -3,7 +3,8 @@ package com.leveledworld.player;
 import com.leveledworld.RpgSounds;
 import com.leveledworld.config.LWConfig;
 import com.leveledworld.network.RpgNetwork;
-import com.leveledworld.skill.Perk;
+import com.leveledworld.skill.PerkDef;
+import com.leveledworld.skill.PerkTrees;
 import com.leveledworld.skill.Skill;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -25,13 +26,31 @@ public final class LevelingService {
         return (level + 3) * 25.0;
     }
 
+    private static java.util.List<? extends String> multSource;
+    private static java.util.Map<String, Double> multCache = java.util.Map.of();
+
+    /** Multiplicador de XP específico da skill (config skillXpMultipliers). */
+    public static synchronized double skillMultiplier(Skill skill) {
+        java.util.List<? extends String> src = LWConfig.SKILL_XP_MULTIPLIERS.get();
+        if (src != multSource) {
+            java.util.Map<String, Double> m = new java.util.HashMap<>();
+            for (String e : src) {
+                String[] kv = e.split("=");
+                try { m.put(kv[0].trim(), Double.parseDouble(kv[1].trim())); } catch (RuntimeException ignored) { }
+            }
+            multCache = m;
+            multSource = src;
+        }
+        return multCache.getOrDefault(skill.id(), 1.0);
+    }
+
     public static PlayerRpgData get(ServerPlayer player) {
         return player.getData(RpgAttachments.PLAYER_DATA);
     }
 
     public static void addSkillXp(ServerPlayer player, Skill skill, double amount) {
         if (amount <= 0 || player.isCreative() || player.isSpectator()) return;
-        amount *= LWConfig.SKILL_XP_MULTIPLIER.get();
+        amount *= LWConfig.SKILL_XP_MULTIPLIER.get() * skillMultiplier(skill);
 
         PlayerRpgData data = get(player);
         SkillProgress progress = data.skill(skill);
@@ -55,6 +74,22 @@ public final class LevelingService {
         RpgNetwork.sync(player);
     }
 
+    /** Dá níveis inteiros numa skill (tomos e treinadores), contando XP de personagem como no Skyrim. */
+    public static void grantSkillLevels(ServerPlayer player, Skill skill, int levels) {
+        PlayerRpgData data = get(player);
+        SkillProgress progress = data.skill(skill);
+        int max = LWConfig.SKILL_MAX_LEVEL.get();
+        double characterXp = 0;
+        for (int i = 0; i < levels && progress.level() < max; i++) {
+            progress.setLevel(progress.level() + 1);
+            onSkillLevelUp(player, skill, progress.level());
+            characterXp += progress.level() * LWConfig.CHARACTER_XP_PER_SKILL_LEVEL.get();
+        }
+        progress.setXp(0);
+        if (characterXp > 0) addCharacterXp(player, characterXp, false);
+        RpgNetwork.sync(player);
+    }
+
     /** Soma XP de personagem; pode subir vários levels, mas toca o som e manda a mensagem uma vez só. */
     public static boolean addCharacterXp(ServerPlayer player, double amount, boolean sync) {
         PlayerRpgData data = get(player);
@@ -67,6 +102,8 @@ public final class LevelingService {
             xp -= characterXpToNext(data.level());
             data.setLevel(data.level() + 1);
             data.setUnspentPoints(data.unspentPoints() + LWConfig.POINTS_PER_LEVEL.get());
+            data.setPerkPoints(Math.max(0, data.perkPoints()) + LWConfig.PERK_POINTS_PER_LEVEL.get());
+            data.setTrainingsThisLevel(0);
         }
         data.setXp(data.level() >= max ? 0 : xp);
 
@@ -86,6 +123,12 @@ public final class LevelingService {
             AttributeService.resetPoints(player);
         }
         data.setUnspentPoints(Math.max(0, earned - data.spentPoints()));
+        int earnedPerks = (data.level() - 1) * LWConfig.PERK_POINTS_PER_LEVEL.get();
+        if (data.spentPerkPoints() > earnedPerks) {
+            PerkService.resetPerks(player);
+        }
+        data.setPerkPoints(Math.max(0, earnedPerks - data.spentPerkPoints()));
+        data.setTrainingsThisLevel(0);
         RpgNetwork.sync(player);
     }
 
@@ -96,21 +139,22 @@ public final class LevelingService {
         RpgNetwork.sync(player);
     }
 
-    /** Retorna true se o novo level desbloqueou um perk. */
+    /** Retorna true se o novo level deixou algum perk disponível para compra. */
     private static boolean onSkillLevelUp(ServerPlayer player, Skill skill, int newLevel) {
         player.displayClientMessage(Component.translatable("message.leveledworld.skill_up",
                 Component.translatable(skill.translationKey()), newLevel).withStyle(ChatFormatting.AQUA), true);
-        boolean unlocked = false;
-        for (Perk perk : Perk.of(skill)) {
-            if (perk.level == newLevel) {
-                player.sendSystemMessage(Component.translatable("message.leveledworld.perk_unlocked",
-                                Component.translatable(perk.translationKey()).withStyle(ChatFormatting.GOLD),
-                                Component.translatable(perk.translationKey() + ".desc").withStyle(ChatFormatting.GRAY))
-                        .withStyle(ChatFormatting.YELLOW));
-                unlocked = true;
+        boolean available = false;
+        for (PerkDef perk : PerkTrees.of(skill)) {
+            for (int lvl : perk.levels) {
+                if (lvl == newLevel && lvl > 0) available = true;
             }
         }
-        return unlocked;
+        if (available) {
+            player.sendSystemMessage(Component.translatable("message.leveledworld.perk_available",
+                    Component.translatable(skill.translationKey()).withStyle(ChatFormatting.GOLD), newLevel)
+                    .withStyle(ChatFormatting.YELLOW));
+        }
+        return available;
     }
 
     private static void onCharacterLevelUp(ServerPlayer player, int newLevel) {

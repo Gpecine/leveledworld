@@ -131,6 +131,11 @@
           "type": "minecraft:item",
           "name": "minecraft:end_crystal",
           "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "leveledworld:skill_tome",
+          "weight": 8
         }
       ]
     }

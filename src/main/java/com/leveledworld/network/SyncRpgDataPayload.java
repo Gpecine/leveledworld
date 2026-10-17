@@ -13,7 +13,9 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
  */
 public record SyncRpgDataPayload(int level, float xp, float xpToNext,
                                  int[] skillLevels, float[] skillXp, float[] skillXpToNext,
-                                 int unspentPoints, int[] attributePoints) implements CustomPacketPayload {
+                                 int unspentPoints, int[] attributePoints,
+                                 int perkPoints, java.util.Map<String, Integer> perks, int[] legendary)
+        implements CustomPacketPayload {
 
     public static final Type<SyncRpgDataPayload> TYPE = new Type<>(LeveledWorld.id("sync_rpg_data"));
 
@@ -32,6 +34,9 @@ public record SyncRpgDataPayload(int level, float xp, float xpToNext,
         }
         buf.writeVarInt(unspentPoints);
         buf.writeVarIntArray(attributePoints);
+        buf.writeVarInt(perkPoints);
+        buf.writeMap(perks, FriendlyByteBuf::writeUtf, FriendlyByteBuf::writeVarInt);
+        buf.writeVarIntArray(legendary);
     }
 
     private static SyncRpgDataPayload read(FriendlyByteBuf buf) {
@@ -54,7 +59,15 @@ public record SyncRpgDataPayload(int level, float xp, float xpToNext,
         }
         int unspent = buf.readVarInt();
         int[] attributes = buf.readVarIntArray();
-        return new SyncRpgDataPayload(level, xp, xpToNext, levels, xps, toNext, unspent, attributes);
+        int perkPoints = buf.readVarInt();
+        java.util.Map<String, Integer> perks = buf.readMap(FriendlyByteBuf::readUtf, FriendlyByteBuf::readVarInt);
+        int[] legendary = buf.readVarIntArray();
+        if (legendary.length < levels.length) legendary = java.util.Arrays.copyOf(legendary, levels.length);
+        return new SyncRpgDataPayload(level, xp, xpToNext, levels, xps, toNext, unspent, attributes, perkPoints, perks, legendary);
+    }
+
+    public int perkRank(String id) {
+        return perks.getOrDefault(id, 0);
     }
 
     @Override

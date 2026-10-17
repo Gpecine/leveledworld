@@ -1,12 +1,15 @@
 package com.leveledworld.client;
 
 import com.leveledworld.LeveledWorld;
+import com.leveledworld.network.BuyPerkPayload;
 import com.leveledworld.network.ClientRpgData;
+import com.leveledworld.network.LegendaryPayload;
 import com.leveledworld.network.ResourcesPayload;
 import com.leveledworld.network.SpendPointPayload;
 import com.leveledworld.network.SyncRpgDataPayload;
 import com.leveledworld.player.RpgAttribute;
-import com.leveledworld.skill.Perk;
+import com.leveledworld.skill.PerkDef;
+import com.leveledworld.skill.PerkTrees;
 import com.leveledworld.skill.Skill;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -31,8 +34,8 @@ import java.util.Random;
 
 /**
  * Tela de status (tecla K) inspirada no menu de skills do Skyrim: céu estrelado com uma constelação por skill
- * num carrossel (arraste, setas, A/D ou roda do mouse), estrelas de perk com tooltip e, embaixo, o painel do
- * personagem com level, XP e os atributos Mana / Vida / Stamina.
+ * num carrossel (arraste, setas, A/D ou roda do mouse). A constelação selecionada mostra a árvore de perks —
+ * clique numa estrela para aprender — e, embaixo, fica o painel do personagem com level, XP e atributos.
  */
 public class StatusScreen extends Screen {
     private static final Skill[] SKILLS = Skill.values();
@@ -41,6 +44,7 @@ public class StatusScreen extends Screen {
     private static final int BUTTON = 12;
     private static final int SKY_W = 1600;
     private static final int SKY_H = 900;
+    private static final int MAX_SKILL_LEVEL = 100;
     /** Fundos (1600x900), um por skill, na mesma ordem de Skill.values(). */
     private static final ResourceLocation[] SKY_TEXTURES = new ResourceLocation[SKILLS.length];
 
@@ -48,8 +52,13 @@ public class StatusScreen extends Screen {
         for (Skill s : SKILLS) SKY_TEXTURES[s.ordinal()] = LeveledWorld.id("textures/gui/sky/" + s.id() + ".png");
     }
 
+    private enum PerkState { MAXED, OWNED, AVAILABLE, NEEDS_LEVEL, LOCKED }
+
+    private record PerkSpot(PerkDef perk, float x, float y, float size) {}
+
     private final Map<RpgAttribute, Button> buttons = new EnumMap<>(RpgAttribute.class);
     private final float[][] backgroundStars;
+    private final List<PerkSpot> spots = new ArrayList<>();
     private float scrollTarget;
     private float scroll;
     /** Posição do fundo: segue {@link #scroll} mais devagar, para a troca de cenário ser suave. */
@@ -58,6 +67,11 @@ public class StatusScreen extends Screen {
     private boolean dragging;
     private double dragDistance;
     private double pressX;
+    private double pressY;
+    /** Popup de confirmação: perk a aprender, ou skill a tornar lendária. */
+    private PerkDef confirmPerk;
+    private Skill confirmLegendary;
+    private int[] legendaryButton;  // x, y, w, h
 
     public StatusScreen() {
         super(Component.translatable("screen.leveledworld.status"));
@@ -78,9 +92,12 @@ public class StatusScreen extends Screen {
     private int panelW() { return width - 16; }
     private int columnW() { return (panelW() - 24) / 3; }
     private int columnX(int i) { return panelX() + 12 + i * columnW(); }
-    private float spacing() { return width * 0.36f; }
-    private float carouselY() { return panelY() * 0.43f; }
-    private float radius() { return Math.min(panelY() * 0.19f, width * 0.14f); }
+    private float spacing() { return width * 0.37f; }
+    private float carouselY() { return panelY() * 0.42f; }
+    /** Raio da árvore de perks da skill selecionada. */
+    private float treeRadius() { return Math.min(panelY() * 0.30f, width * 0.2f); }
+    /** Raio dos símbolos das constelações laterais. */
+    private float sideRadius() { return Math.min(panelY() * 0.17f, width * 0.11f); }
 
     @Override
     protected void init() {
@@ -104,10 +121,10 @@ public class StatusScreen extends Screen {
     private void updateButtons() {
         SyncRpgDataPayload data = ClientRpgData.get();
         boolean canSpend = data != null && data.unspentPoints() > 0;
-        buttons.values().forEach(b -> b.visible = canSpend);
+        buttons.values().forEach(b -> b.visible = canSpend && confirmPerk == null && confirmLegendary == null);
     }
 
-    // ---------- render ----------
+    // ---------- fundo ----------
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
@@ -162,6 +179,8 @@ public class StatusScreen extends Screen {
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
     }
 
+    // ---------- render ----------
+
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         // Animação independente do FPS (desaceleração exponencial).
@@ -179,20 +198,27 @@ public class StatusScreen extends Screen {
             return;
         }
 
-        Perk hovered = renderCarousel(g, data, mouseX, mouseY);
-        renderSelectedInfo(g, data);
+        boolean popup = confirmPerk != null || confirmLegendary != null;
+        int mx = popup ? -1000 : mouseX;
+        int my = popup ? -1000 : mouseY;
+        PerkDef hovered = renderCarousel(g, data, mx, my);
+        renderSelectedInfo(g, data, mx, my);
         renderPanel(g, data);
         for (var widget : renderables) widget.render(g, mouseX, mouseY, partialTick);
 
-        if (hovered != null) renderPerkTooltip(g, data, hovered, mouseX, mouseY);
+        if (popup) {
+            renderConfirm(g, data, mouseX, mouseY);
+        } else if (hovered != null) {
+            renderPerkTooltip(g, data, hovered, mouseX, mouseY);
+        }
     }
 
-    /** Desenha as constelações; retorna o perk sob o mouse (só na constelação selecionada). */
-    private Perk renderCarousel(GuiGraphics g, SyncRpgDataPayload data, int mouseX, int mouseY) {
+    /** Desenha as constelações; a selecionada mostra a árvore de perks. Retorna o perk sob o mouse. */
+    private PerkDef renderCarousel(GuiGraphics g, SyncRpgDataPayload data, int mouseX, int mouseY) {
         float cx = width / 2f;
         float cy = carouselY();
-        Perk hovered = null;
-        // Desenha de trás para frente: as mais distantes primeiro.
+        PerkDef hovered = null;
+        spots.clear();
         List<Integer> order = new ArrayList<>();
         for (int i = 0; i < SKILLS.length; i++) order.add(i);
         order.sort((a, b) -> Float.compare(Math.abs(offset(b)), Math.abs(offset(a))));
@@ -202,136 +228,178 @@ public class StatusScreen extends Screen {
             float ad = Math.abs(d);
             float alpha = Mth.clamp(1f - ad * 0.42f, 0f, 1f);
             if (alpha < 0.05f) continue;
-            float scale = 1f / (1f + ad * 0.55f);
             float x = cx + d * spacing() * (1f - 0.1f * ad);
-            float r = radius() * scale;
             Skill skill = SKILLS[i];
-            int level = data.skillLevels()[i];
-            Perk h = drawConstellation(g, skill, level, x, cy, r, alpha, ad < 0.5f, mouseX, mouseY);
-            if (h != null) hovered = h;
-
+            // A árvore aparece só na selecionada; nas outras, o símbolo menor.
+            float focus = Mth.clamp(1f - ad * 2f, 0f, 1f);
+            float r = sideRadius() + (treeRadius() - sideRadius()) * focus;
+            r /= (1f + ad * 0.45f);
+            drawSymbol(g, skill, x, cy, r, alpha * (focus > 0 ? 0.35f + 0.25f * (1 - focus) : 0.75f), focus > 0.5f);
+            if (focus > 0.05f) {
+                PerkDef h = drawPerkTree(g, data, skill, x, cy, r, alpha * focus, focus > 0.9f, mouseX, mouseY);
+                if (h != null) hovered = h;
+            }
             if (ad >= 0.5f) {
                 Component name = Component.translatable(skill.translationKey());
                 g.drawCenteredString(font, name, (int) x, (int) (cy + r + 6), RpgUi.fade(0xFFB8C4E8, alpha));
             }
         }
-        // Setas indicando que dá para girar.
         float pulse = 0.5f + 0.3f * Mth.sin((System.currentTimeMillis() % 2000) / 2000f * Mth.TWO_PI);
         g.drawString(font, "«", 10, (int) cy - 4, RpgUi.fade(RpgUi.GOLD_LIGHT, pulse));
         g.drawString(font, "»", width - 16, (int) cy - 4, RpgUi.fade(RpgUi.GOLD_LIGHT, pulse));
         return hovered;
     }
 
-    private static float approach(float current, float target, float rate, float dt) {
-        return current + (target - current) * (1f - (float) Math.exp(-rate * dt));
-    }
-
-    /** Distância (em "slots") da skill i até o centro do carrossel, com volta circular. */
-    private float offset(int i) {
-        return wrapOffset(i - scroll);
-    }
-
-    /** Mesma distância, mas usando a posição (mais lenta) do fundo. */
-    private float skyOffset(int i) {
-        return wrapOffset(i - skyScroll);
-    }
-
-    private static float wrapOffset(float raw) {
-        float n = SKILLS.length;
-        float d = raw;
-        d = ((d % n) + n) % n;
-        if (d > n / 2f) d -= n;
-        return d;
-    }
-
-    private int selectedIndex() {
-        int n = SKILLS.length;
-        return ((Math.round(scrollTarget) % n) + n) % n;
-    }
-
-    private Perk drawConstellation(GuiGraphics g, Skill skill, int level, float cx, float cy, float r, float alpha,
-                                   boolean selected, int mouseX, int mouseY) {
+    /** Símbolo decorativo da skill (espada, arco, escudo…). */
+    private void drawSymbol(GuiGraphics g, Skill skill, float cx, float cy, float r, float alpha, boolean faint) {
         Constellations.Shape shape = Constellations.of(skill);
-        List<Perk> perks = Perk.of(skill);
         float[][] pts = new float[shape.stars().length][2];
         for (int k = 0; k < pts.length; k++) {
             pts[k][0] = cx + shape.stars()[k][0] * r;
             pts[k][1] = cy + shape.stars()[k][1] * r;
         }
-
-        // Brilho de nebulosa atrás da constelação (mais forte na selecionada).
-        float glow = selected ? 1f : 0.45f;
+        float halo = faint ? 0.16f : 0.07f;
         for (int ring = 5; ring >= 1; ring--) {
-            circle(g, cx, cy, r * (0.45f + ring * 0.22f), RpgUi.fade(0xFF0A0E20, 0.07f * glow * alpha));
+            circle(g, cx, cy, r * (0.5f + ring * 0.26f), RpgUi.fade(0xFF05070F, halo * alpha));
         }
-
-        int lineColor = RpgUi.fade(selected ? 0xFFAFC3FF : 0xFF8090C0, (selected ? 0.75f : 0.45f) * alpha);
+        int lineColor = RpgUi.fade(faint ? 0xFF8090C0 : 0xFFAFC3FF, (faint ? 0.35f : 0.6f) * alpha);
         for (int[] e : shape.edges()) {
-            line(g, pts[e[0]][0], pts[e[0]][1], pts[e[1]][0], pts[e[1]][1], selected ? 0.9f : 0.6f, lineColor);
+            line(g, pts[e[0]][0], pts[e[0]][1], pts[e[1]][0], pts[e[1]][1], faint ? 0.5f : 0.7f, lineColor);
         }
+        float size = Math.max(1.2f, r * 0.04f);
+        for (float[] p : pts) {
+            circle(g, p[0], p[1], size * 2.2f, RpgUi.fade(0xFF9FB4FF, 0.16f * alpha));
+            diamond(g, p[0], p[1], size, RpgUi.fade(0xFFE8EEFF, alpha));
+        }
+    }
 
-        Perk hovered = null;
+    private PerkState state(SyncRpgDataPayload data, PerkDef perk) {
+        int rank = data.perkRank(perk.id);
+        if (rank >= perk.maxRank()) return PerkState.MAXED;
+        boolean reqOk = perk.requires.isEmpty();
+        for (String r : perk.requires) if (data.perkRank(perk.skill.id() + "." + r) > 0) reqOk = true;
+        if (!reqOk) return rank > 0 ? PerkState.OWNED : PerkState.LOCKED;
+        if (data.skillLevels()[perk.skill.ordinal()] < perk.levelForNextRank(rank)) {
+            return rank > 0 ? PerkState.OWNED : PerkState.NEEDS_LEVEL;
+        }
+        return data.perkPoints() > 0 ? PerkState.AVAILABLE : (rank > 0 ? PerkState.OWNED : PerkState.NEEDS_LEVEL);
+    }
+
+    /** Árvore de perks: estrelas ligadas pelos requisitos. */
+    private PerkDef drawPerkTree(GuiGraphics g, SyncRpgDataPayload data, Skill skill, float cx, float cy, float r,
+                                 float alpha, boolean interactive, int mouseX, int mouseY) {
+        List<PerkDef> perks = PerkTrees.of(skill);
+        float rx = r * 1.4f;
+        float ry = r * 0.84f;
+        for (PerkDef p : perks) {
+            for (String req : p.requires) {
+                PerkDef parent = PerkTrees.byLocal(skill, req);
+                boolean lit = data.perkRank(p.id) > 0 && data.perkRank(parent.id) > 0;
+                int color = lit ? RpgUi.fade(0xFFF2C25A, 0.9f * alpha) : RpgUi.fade(0xFFA8B8E8, 0.55f * alpha);
+                line(g, cx + parent.x() * rx, cy + parent.y() * ry, cx + p.x() * rx, cy + p.y() * ry, lit ? 1.0f : 0.7f, color);
+            }
+        }
+        PerkDef hovered = null;
         float time = (System.currentTimeMillis() % 100000) / 1000f;
-        for (int k = 0; k < pts.length; k++) {
-            int perkTier = indexOf(shape.perks(), k);
-            float x = pts[k][0], y = pts[k][1];
-            if (perkTier >= 0) {
-                Perk perk = perks.get(perkTier);
-                boolean unlocked = perk.unlocked(level);
-                float size = Math.max(2.5f, r * 0.09f);
-                if (unlocked) {
-                    float tw = 0.75f + 0.25f * Mth.sin(time * 2f + k);
-                    circle(g, x, y, size * 3.2f, RpgUi.fade(0xFFF2C25A, 0.12f * alpha * tw));
-                    circle(g, x, y, size * 2.0f, RpgUi.fade(0xFFF2C25A, 0.22f * alpha * tw));
+        float size = Math.max(2.4f, r * 0.055f);
+        for (PerkDef p : perks) {
+            float x = cx + p.x() * rx;
+            float y = cy + p.y() * ry;
+            PerkState st = state(data, p);
+            float tw = 0.75f + 0.25f * Mth.sin(time * 2.2f + p.index);
+            switch (st) {
+                case MAXED -> {
+                    circle(g, x, y, size * 3.0f, RpgUi.fade(0xFFF2C25A, 0.14f * alpha * tw));
+                    circle(g, x, y, size * 1.9f, RpgUi.fade(0xFFF2C25A, 0.25f * alpha * tw));
                     diamond(g, x, y, size * 1.3f, RpgUi.fade(0xFFFFE6A0, alpha));
                     diamond(g, x, y, size * 0.6f, RpgUi.fade(0xFFFFFFFF, alpha));
-                } else {
-                    diamond(g, x, y, size * 1.2f, RpgUi.fade(0xFF2A3050, alpha));
-                    diamond(g, x, y, size * 0.8f, RpgUi.fade(0xFF8A94B8, 0.8f * alpha));
                 }
-                if (selected && Math.abs(mouseX - x) <= size * 1.6f + 2 && Math.abs(mouseY - y) <= size * 1.6f + 2) {
-                    hovered = perk;
-                    diamond(g, x, y, size * 2.2f, RpgUi.fade(0xFFFFFFFF, 0.25f));
+                case OWNED -> {
+                    circle(g, x, y, size * 2.0f, RpgUi.fade(0xFFF2C25A, 0.18f * alpha * tw));
+                    diamond(g, x, y, size * 1.15f, RpgUi.fade(0xFFE0B860, alpha));
+                    diamond(g, x, y, size * 0.5f, RpgUi.fade(0xFF2A2234, alpha));
                 }
-            } else {
-                float size = Math.max(1.2f, r * 0.045f);
-                circle(g, x, y, size * 2.2f, RpgUi.fade(0xFF9FB4FF, 0.16f * alpha));
-                diamond(g, x, y, size, RpgUi.fade(0xFFE8EEFF, alpha));
+                case AVAILABLE -> {
+                    float pulse = 0.55f + 0.45f * Mth.sin(time * 4f + p.index);
+                    boolean partial = data.perkRank(p.id) > 0;
+                    circle(g, x, y, size * 2.6f, RpgUi.fade(partial ? 0xFFF2C25A : 0xFFBFD6FF, 0.24f * alpha * pulse));
+                    diamond(g, x, y, size * 1.15f, RpgUi.fade(partial ? 0xFFFFE6A0 : 0xFFE8F0FF, alpha));
+                    if (partial) diamond(g, x, y, size * 0.5f, RpgUi.fade(0xFFFFFFFF, alpha));
+                }
+                case NEEDS_LEVEL -> {
+                    diamond(g, x, y, size * 1.1f, RpgUi.fade(0xFF2A3050, alpha));
+                    diamond(g, x, y, size * 0.75f, RpgUi.fade(0xFF8A94B8, 0.85f * alpha));
+                }
+                case LOCKED -> {
+                    diamond(g, x, y, size * 0.95f, RpgUi.fade(0xFF1C2036, alpha));
+                    diamond(g, x, y, size * 0.6f, RpgUi.fade(0xFF4A5070, 0.8f * alpha));
+                }
+            }
+            int rank = data.perkRank(p.id);
+            if (p.maxRank() > 1 && rank > 0 && interactive) {
+                String txt = rank + "/" + p.maxRank();
+                g.pose().pushPose();
+                g.pose().translate(x + size * 1.4f, y - size * 2.6f, 0);
+                g.pose().scale(0.5f, 0.5f, 1f);
+                g.drawString(font, txt, 0, 0, RpgUi.fade(0xFFFFE6A0, alpha));
+                g.pose().popPose();
+            }
+            if (interactive) {
+                spots.add(new PerkSpot(p, x, y, size));
+                if (Math.abs(mouseX - x) <= size * 1.8f + 1.5f && Math.abs(mouseY - y) <= size * 1.8f + 1.5f) {
+                    hovered = p;
+                    circle(g, x, y, size * 2.4f, RpgUi.fade(0xFFFFFFFF, 0.22f));
+                }
             }
         }
         return hovered;
     }
 
-    private void renderSelectedInfo(GuiGraphics g, SyncRpgDataPayload data) {
+    private void renderSelectedInfo(GuiGraphics g, SyncRpgDataPayload data, int mouseX, int mouseY) {
         int i = selectedIndex();
         Skill skill = SKILLS[i];
         int level = data.skillLevels()[i];
         int cx = width / 2;
-        int y = (int) (carouselY() + radius() + 7);
+        int y = (int) (carouselY() + treeRadius() + 5);
+        legendaryButton = null;
+
+        Component group = Component.translatable(skill.group.translationKey());
+        int stars = i < data.legendary().length ? data.legendary()[i] : 0;
+        Component name = Component.translatable(skill.translationKey()).withStyle(ChatFormatting.BOLD);
+        if (stars > 0) name = name.copy().append(Component.literal(" ★" + (stars > 1 ? stars : "")).withStyle(ChatFormatting.GOLD));
 
         g.pose().pushPose();
         g.pose().translate(cx, y, 0);
-        g.pose().scale(1.35f, 1.35f, 1f);
-        g.drawCenteredString(font, Component.translatable(skill.translationKey()).withStyle(ChatFormatting.BOLD), 0, 0, RpgUi.GOLD_LIGHT);
+        g.pose().scale(1.25f, 1.25f, 1f);
+        g.drawCenteredString(font, name, 0, 0, RpgUi.GOLD_LIGHT);
         g.pose().popPose();
-        y += 15;
+        g.pose().pushPose();
+        g.pose().translate(cx, y - 7, 0);
+        g.pose().scale(0.6f, 0.6f, 1f);
+        g.drawCenteredString(font, group.copy().withStyle(ChatFormatting.BOLD), 0, 0, 0xFF9FB0D8);
+        g.pose().popPose();
+        y += 13;
 
-        Component lvl = Component.translatable("screen.leveledworld.skill_level", level);
-        g.drawCenteredString(font, lvl, cx, y, RpgUi.TEXT);
+        String lvl = Component.translatable("screen.leveledworld.skill_level", level).getString();
+        int bw = 110;
+        int lw = font.width(lvl);
+        int rowX = cx - (lw + 6 + bw) / 2;
+        g.drawString(font, lvl, rowX, y, RpgUi.TEXT);
+        RpgUi.bar(g, rowX + lw + 6, y + 2, bw, 3, RpgHud.progress(data.skillXp()[i], data.skillXpToNext()[i]), RpgUi.SKILL);
         y += 11;
-        int bw = 130;
-        RpgUi.bar(g, cx - bw / 2, y, bw, 3, RpgHud.progress(data.skillXp()[i], data.skillXpToNext()[i]), RpgUi.SKILL);
-        y += 7;
 
-        Perk next = null;
-        for (Perk p : Perk.of(skill)) {
-            if (!p.unlocked(level)) { next = p; break; }
+        if (level >= MAX_SKILL_LEVEL) {
+            Component label = Component.translatable("screen.leveledworld.make_legendary");
+            int w = font.width(label) + 12;
+            int bx = cx - w / 2;
+            boolean hover = mouseX >= bx && mouseX <= bx + w && mouseY >= y - 1 && mouseY <= y + 11;
+            g.fill(bx - 1, y - 2, bx + w + 1, y + 12, 0xFF000000);
+            g.fillGradient(bx, y - 1, bx + w, y + 11, hover ? 0xFFFFE8A8 : RpgUi.GOLD_LIGHT, RpgUi.GOLD_DARK);
+            g.drawString(font, label, bx + 6, y + 1, 0xFF1A1206, false);
+            legendaryButton = new int[]{bx, y - 1, w, 12};
+        } else {
+            g.drawCenteredString(font, Component.translatable("skill.leveledworld." + skill.id() + ".desc"), cx, y, RpgUi.TEXT_DIM);
         }
-        Component hint = next != null
-                ? Component.translatable("screen.leveledworld.next_perk",
-                        Component.translatable(next.translationKey()).withStyle(ChatFormatting.GOLD), next.level)
-                : Component.translatable("screen.leveledworld.all_perks").withStyle(ChatFormatting.GOLD);
-        g.drawCenteredString(font, hint, cx, y, RpgUi.TEXT_DIM);
     }
 
     private void renderPanel(GuiGraphics g, SyncRpgDataPayload data) {
@@ -339,19 +407,11 @@ public class StatusScreen extends Screen {
         RpgUi.panel(g, px, py, pw, PANEL_H);
         int cx = px + pw / 2;
 
-        // Linha 1: pontos (esquerda) | medalhão + level + XP (centro)
-        Component pts = Component.translatable("screen.leveledworld.points", data.unspentPoints());
-        if (data.unspentPoints() > 0) {
-            float pulse = 0.75f + 0.25f * Mth.sin((System.currentTimeMillis() % 1200) / 1200f * Mth.TWO_PI);
-            int w = font.width(pts) + 10;
-            g.fill(px + 9, py + 6, px + 11 + w, py + 20, 0xFF000000);
-            g.fillGradient(px + 10, py + 7, px + 10 + w, py + 19, RpgUi.fade(RpgUi.GOLD_LIGHT, pulse), RpgUi.fade(RpgUi.GOLD_DARK, pulse));
-            g.drawString(font, pts, px + 15, py + 9, 0xFF1A1206, false);
-        } else {
-            g.drawString(font, pts, px + 10, py + 9, RpgUi.TEXT_DIM);
-        }
+        chip(g, px + 10, py + 7, Component.translatable("screen.leveledworld.points", data.unspentPoints()), data.unspentPoints() > 0, false);
+        Component perkPts = Component.translatable("screen.leveledworld.perk_points", data.perkPoints());
+        chip(g, px + pw - 10 - font.width(perkPts) - 10, py + 7, perkPts, data.perkPoints() > 0, true);
 
-        int barW = Math.min(170, pw / 3);
+        int barW = Math.min(150, pw / 3);
         int bx = cx - barW / 2 + 14;
         RpgUi.levelBadge(g, font, bx - 26, py + 5, 20, data.level());
         g.drawString(font, Component.translatable("screen.leveledworld.character_level", data.level()), bx, py + 6, RpgUi.GOLD_LIGHT);
@@ -359,7 +419,6 @@ public class StatusScreen extends Screen {
         g.drawString(font, xp, bx + barW - font.width(xp), py + 6, RpgUi.TEXT_DIM);
         RpgUi.bar(g, bx, py + 17, barW, 4, RpgHud.progress(data.xp(), data.xpToNext()), RpgUi.XP);
 
-        // Linha 2: Mana | Vida | Stamina
         ResourcesPayload res = ClientRpgData.resources();
         var player = minecraft != null ? minecraft.player : null;
         for (int i = 0; i < ATTRIBUTE_ORDER.length; i++) {
@@ -386,24 +445,122 @@ public class StatusScreen extends Screen {
         }
     }
 
-    private void renderPerkTooltip(GuiGraphics g, SyncRpgDataPayload data, Perk perk, int mouseX, int mouseY) {
-        boolean unlocked = perk.unlocked(data.skillLevels()[perk.skill.ordinal()]);
+    /** Selo de pontos (dourado pulsante quando há pontos; roxo para perks). */
+    private void chip(GuiGraphics g, int x, int y, Component text, boolean active, boolean perk) {
+        int w = font.width(text) + 10;
+        if (active) {
+            float pulse = 0.75f + 0.25f * Mth.sin((System.currentTimeMillis() % 1200) / 1200f * Mth.TWO_PI);
+            int top = perk ? 0xFFD9B8FF : RpgUi.GOLD_LIGHT;
+            int bottom = perk ? 0xFF5A2E8A : RpgUi.GOLD_DARK;
+            g.fill(x - 1, y - 1, x + w + 1, y + 13, 0xFF000000);
+            g.fillGradient(x, y, x + w, y + 12, RpgUi.fade(top, pulse), RpgUi.fade(bottom, pulse));
+            g.drawString(font, text, x + 5, y + 2, perk ? 0xFFFFFFFF : 0xFF1A1206, false);
+        } else {
+            g.drawString(font, text, x + 5, y + 2, RpgUi.TEXT_DIM);
+        }
+    }
+
+    private void renderPerkTooltip(GuiGraphics g, SyncRpgDataPayload data, PerkDef perk, int mouseX, int mouseY) {
+        int rank = data.perkRank(perk.id);
+        PerkState st = state(data, perk);
         List<Component> lines = new ArrayList<>();
-        lines.add(Component.translatable(perk.translationKey()).withStyle(unlocked ? ChatFormatting.GOLD : ChatFormatting.GRAY));
+        lines.add(Component.translatable(perk.translationKey())
+                .withStyle(rank > 0 ? ChatFormatting.GOLD : st == PerkState.AVAILABLE ? ChatFormatting.WHITE : ChatFormatting.GRAY));
         lines.add(Component.translatable(perk.translationKey() + ".desc").withStyle(ChatFormatting.WHITE));
-        lines.add(unlocked
-                ? Component.translatable("screen.leveledworld.perk_unlocked").withStyle(ChatFormatting.GREEN)
-                : Component.translatable("screen.leveledworld.perk_requires",
-                        Component.translatable(perk.skill.translationKey()), perk.level).withStyle(ChatFormatting.DARK_GRAY));
+        if (perk.maxRank() > 1) {
+            lines.add(Component.translatable("screen.leveledworld.perk_rank", rank, perk.maxRank()).withStyle(ChatFormatting.YELLOW));
+        }
+        int need = perk.levelForNextRank(rank);
+        if (st != PerkState.MAXED && need > 0) {
+            boolean levelOk = data.skillLevels()[perk.skill.ordinal()] >= need;
+            lines.add(Component.translatable("screen.leveledworld.perk_requires",
+                    Component.translatable(perk.skill.translationKey()), need)
+                    .withStyle(levelOk ? ChatFormatting.DARK_GREEN : ChatFormatting.RED));
+        }
+        if (st == PerkState.LOCKED) {
+            Component reqs = Component.empty();
+            for (int k = 0; k < perk.requires.size(); k++) {
+                if (k > 0) reqs = reqs.copy().append(Component.translatable("screen.leveledworld.or"));
+                reqs = reqs.copy().append(Component.translatable(PerkTrees.byLocal(perk.skill, perk.requires.get(k)).translationKey()));
+            }
+            lines.add(Component.translatable("screen.leveledworld.perk_requires_perk", reqs).withStyle(ChatFormatting.RED));
+        }
+        lines.add(switch (st) {
+            case MAXED -> Component.translatable("screen.leveledworld.perk_unlocked").withStyle(ChatFormatting.GREEN);
+            case AVAILABLE -> Component.translatable("screen.leveledworld.perk_click").withStyle(ChatFormatting.AQUA);
+            default -> data.perkPoints() <= 0 && st == PerkState.OWNED || data.perkPoints() <= 0 && st == PerkState.NEEDS_LEVEL
+                    ? Component.translatable("screen.leveledworld.perk_no_points").withStyle(ChatFormatting.DARK_GRAY)
+                    : Component.empty();
+        });
         g.renderComponentTooltip(font, lines, mouseX, mouseY);
     }
 
-    // ---------- primitivas (quads no buffer de GUI) ----------
-
-    private static int indexOf(int[] arr, int v) {
-        for (int i = 0; i < arr.length; i++) if (arr[i] == v) return i;
-        return -1;
+    /** Popup de confirmação (aprender perk / tornar lendária). */
+    private void renderConfirm(GuiGraphics g, SyncRpgDataPayload data, int mouseX, int mouseY) {
+        g.pose().pushPose();
+        g.pose().translate(0, 0, 400);
+        g.fill(0, 0, width, height, 0x80000000);
+        Component titleText;
+        Component body;
+        if (confirmPerk != null) {
+            titleText = Component.translatable(confirmPerk.translationKey());
+            body = Component.translatable(confirmPerk.translationKey() + ".desc");
+        } else {
+            titleText = Component.translatable("screen.leveledworld.make_legendary");
+            body = Component.translatable("screen.leveledworld.legendary_confirm", Component.translatable(confirmLegendary.translationKey()));
+        }
+        List<net.minecraft.util.FormattedCharSequence> wrapped = font.split(body, 200);
+        int w = 220;
+        int h = 46 + wrapped.size() * 10;
+        int x = (width - w) / 2;
+        int y = (int) (carouselY() - h / 2f);
+        RpgUi.panel(g, x, y, w, h);
+        g.drawCenteredString(font, titleText.copy().withStyle(ChatFormatting.BOLD), width / 2, y + 7, RpgUi.GOLD_LIGHT);
+        for (int k = 0; k < wrapped.size(); k++) g.drawCenteredString(font, wrapped.get(k), width / 2, y + 20 + k * 10, RpgUi.TEXT);
+        int by = y + h - 17;
+        drawButton(g, x + 20, by, 80, Component.translatable(confirmPerk != null ? "screen.leveledworld.learn" : "screen.leveledworld.confirm"), mouseX, mouseY, true);
+        drawButton(g, x + w - 100, by, 80, Component.translatable("gui.cancel"), mouseX, mouseY, false);
+        g.pose().popPose();
     }
+
+    private void drawButton(GuiGraphics g, int x, int y, int w, Component label, int mouseX, int mouseY, boolean primary) {
+        boolean hover = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + 12;
+        g.fill(x - 1, y - 1, x + w + 1, y + 13, 0xFF000000);
+        int top = primary ? (hover ? 0xFFFFE8A8 : RpgUi.GOLD_LIGHT) : (hover ? 0xFF6A6478 : 0xFF4A4458);
+        int bottom = primary ? RpgUi.GOLD_DARK : 0xFF242030;
+        g.fillGradient(x, y, x + w, y + 12, top, bottom);
+        g.drawCenteredString(font, label, x + w / 2, y + 2, primary ? 0xFF1A1206 : 0xFFE8E2D0);
+    }
+
+    // ---------- carrossel ----------
+
+    private static float approach(float current, float target, float rate, float dt) {
+        return current + (target - current) * (1f - (float) Math.exp(-rate * dt));
+    }
+
+    /** Distância (em "slots") da skill i até o centro do carrossel, com volta circular. */
+    private float offset(int i) {
+        return wrapOffset(i - scroll);
+    }
+
+    /** Mesma distância, mas usando a posição (mais lenta) do fundo. */
+    private float skyOffset(int i) {
+        return wrapOffset(i - skyScroll);
+    }
+
+    private static float wrapOffset(float raw) {
+        float n = SKILLS.length;
+        float d = ((raw % n) + n) % n;
+        if (d > n / 2f) d -= n;
+        return d;
+    }
+
+    private int selectedIndex() {
+        int n = SKILLS.length;
+        return ((Math.round(scrollTarget) % n) + n) % n;
+    }
+
+    // ---------- primitivas (quads no buffer de GUI) ----------
 
     /** Disco aproximado por 24 fatias (quads degenerados centro-a-b-b). */
     private static void circle(GuiGraphics g, float cx, float cy, float r, int color) {
@@ -451,14 +608,42 @@ public class StatusScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (confirmPerk != null || confirmLegendary != null) {
+            handleConfirmClick(mouseX, mouseY);
+            return true;
+        }
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
         if (button == 0 && mouseY < panelY()) {
             dragging = true;
             dragDistance = 0;
             pressX = mouseX;
+            pressY = mouseY;
             return true;
         }
         return false;
+    }
+
+    private void handleConfirmClick(double mouseX, double mouseY) {
+        SyncRpgDataPayload data = ClientRpgData.get();
+        int lines = data == null ? 1 : font.split(confirmPerk != null
+                ? Component.translatable(confirmPerk.translationKey() + ".desc")
+                : Component.translatable("screen.leveledworld.legendary_confirm", Component.translatable(confirmLegendary.translationKey())), 200).size();
+        int w = 220;
+        int h = 46 + lines * 10;
+        int x = (width - w) / 2;
+        int y = (int) (carouselY() - h / 2f);
+        int by = y + h - 17;
+        if (mouseY >= by && mouseY <= by + 12) {
+            if (mouseX >= x + 20 && mouseX <= x + 100) {
+                if (confirmPerk != null) PacketDistributor.sendToServer(new BuyPerkPayload(confirmPerk.id));
+                else PacketDistributor.sendToServer(new LegendaryPayload(confirmLegendary.ordinal()));
+            } else if (!(mouseX >= x + w - 100 && mouseX <= x + w - 20)) {
+                return;
+            }
+            confirmPerk = null;
+            confirmLegendary = null;
+            updateButtons();
+        }
     }
 
     @Override
@@ -475,25 +660,62 @@ public class StatusScreen extends Screen {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (dragging) {
             dragging = false;
-            if (dragDistance < 3) {
-                // Clique simples numa constelação lateral: gira até ela.
-                float rel = (float) ((pressX - width / 2f) / spacing());
-                if (Math.abs(rel) > 0.5f) scrollTarget += Math.round(rel);
-            }
+            if (dragDistance < 3) onClick(pressX, pressY);
             scrollTarget = Math.round(scrollTarget);
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
+    /** Clique simples: estrela de perk, botão de lendária ou constelação lateral. */
+    private void onClick(double mouseX, double mouseY) {
+        SyncRpgDataPayload data = ClientRpgData.get();
+        if (data == null) return;
+        if (legendaryButton != null && mouseX >= legendaryButton[0] && mouseX <= legendaryButton[0] + legendaryButton[2]
+                && mouseY >= legendaryButton[1] && mouseY <= legendaryButton[1] + legendaryButton[3]) {
+            confirmLegendary = SKILLS[selectedIndex()];
+            updateButtons();
+            return;
+        }
+        for (PerkSpot s : spots) {
+            if (Math.abs(mouseX - s.x()) <= s.size() * 1.8f + 1.5f && Math.abs(mouseY - s.y()) <= s.size() * 1.8f + 1.5f) {
+                if (state(data, s.perk()) == PerkState.AVAILABLE) {
+                    confirmPerk = s.perk();
+                    updateButtons();
+                }
+                return;
+            }
+        }
+        float rel = (float) ((mouseX - width / 2f) / spacing());
+        if (Math.abs(rel) > 0.5f) scrollTarget += Math.round(rel);
+    }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (confirmPerk != null || confirmLegendary != null) return true;
         scrollTarget = Math.round(scrollTarget - Math.signum(scrollY != 0 ? scrollY : scrollX));
         return true;
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (confirmPerk != null || confirmLegendary != null) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                confirmPerk = null;
+                confirmLegendary = null;
+                updateButtons();
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+                if (confirmPerk != null) PacketDistributor.sendToServer(new BuyPerkPayload(confirmPerk.id));
+                else PacketDistributor.sendToServer(new LegendaryPayload(confirmLegendary.ordinal()));
+                confirmPerk = null;
+                confirmLegendary = null;
+                updateButtons();
+                return true;
+            }
+            return true;
+        }
         if (ClientSetup.OPEN_STATUS.matches(keyCode, scanCode)) {
             onClose();
             return true;

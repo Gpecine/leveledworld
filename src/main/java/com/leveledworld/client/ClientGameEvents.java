@@ -22,6 +22,14 @@ public final class ClientGameEvents {
                 && !mc.player.isCreative() && !mc.player.isSpectator()) {
             mc.player.setSprinting(false);
         }
+        // Escalador (Atletismo): sobe escadas e trepadeiras mais rápido (movimento é do lado do cliente).
+        if (mc.player != null && mc.player.onClimbable() && mc.player.getDeltaMovement().y > 0.05) {
+            double climb = com.leveledworld.network.ClientRpgData.stat(com.leveledworld.skill.Stat.CLIMB_SPEED);
+            if (climb > 0) {
+                var v = mc.player.getDeltaMovement();
+                mc.player.setDeltaMovement(v.x, Math.min(0.2 * (1 + climb), v.y * (1 + climb)), v.z);
+            }
+        }
         while (ClientSetup.OPEN_STATUS.consumeClick()) {
             if (mc.player != null && mc.screen == null) {
                 mc.setScreen(new StatusScreen());

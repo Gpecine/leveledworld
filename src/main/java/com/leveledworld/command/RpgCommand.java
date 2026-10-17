@@ -5,6 +5,7 @@ import com.leveledworld.mob.MobScaling;
 import com.leveledworld.network.RpgNetwork;
 import com.leveledworld.player.AttributeService;
 import com.leveledworld.player.LevelingService;
+import com.leveledworld.player.PerkService;
 import com.leveledworld.player.PlayerRpgData;
 import com.leveledworld.player.RpgAttribute;
 import com.leveledworld.skill.Skill;
@@ -36,6 +37,9 @@ import java.util.Arrays;
  * /rpg skill addxp <jogador> <skill> <xp>
  * /rpg points add <jogador> <quantidade>
  * /rpg points reset <jogador>
+ * /rpg perks reset <jogador>
+ * /rpg perks points <jogador> <quantidade>
+ * /rpg tome <jogador> <skill> [níveis]
  * /rpg mob <entidade>
  */
 @EventBusSubscriber(modid = LeveledWorld.MODID)
@@ -100,6 +104,30 @@ public final class RpgCommand {
                                             AttributeService.resetPoints(p);
                                             return info(c, p);
                                         }))))
+                .then(Commands.literal("perks").requires(s -> s.hasPermission(2))
+                        .then(Commands.literal("reset")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(c -> {
+                                            ServerPlayer p = EntityArgument.getPlayer(c, "player");
+                                            PerkService.resetPerks(p);
+                                            return info(c, p);
+                                        })))
+                        .then(Commands.literal("points")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                                .executes(c -> {
+                                                    ServerPlayer p = EntityArgument.getPlayer(c, "player");
+                                                    PlayerRpgData data = LevelingService.get(p);
+                                                    data.setPerkPoints(Math.max(0, data.perkPoints()) + IntegerArgumentType.getInteger(c, "amount"));
+                                                    RpgNetwork.sync(p);
+                                                    return info(c, p);
+                                                })))))
+                .then(Commands.literal("tome").requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(skillArg()
+                                        .executes(c -> giveTome(c, 1))
+                                        .then(Commands.argument("levels", IntegerArgumentType.integer(1, 10))
+                                                .executes(c -> giveTome(c, IntegerArgumentType.getInteger(c, "levels")))))))
                 .then(Commands.literal("mob").requires(s -> s.hasPermission(2))
                         .then(Commands.argument("target", EntityArgument.entity())
                                 .executes(c -> {
@@ -123,11 +151,20 @@ public final class RpgCommand {
         return skill;
     }
 
+    private static int giveTome(CommandContext<CommandSourceStack> c, int levels) throws CommandSyntaxException {
+        ServerPlayer p = EntityArgument.getPlayer(c, "player");
+        var stack = com.leveledworld.item.SkillTomeItem.create(com.leveledworld.item.RpgItems.SKILL_TOME.get(), getSkill(c), levels, 0, false);
+        if (!p.getInventory().add(stack)) p.drop(stack, false);
+        return 1;
+    }
+
     private static int info(CommandContext<CommandSourceStack> c, ServerPlayer p) {
         PlayerRpgData data = LevelingService.get(p);
         CommandSourceStack src = c.getSource();
         src.sendSuccess(() -> Component.translatable("command.leveledworld.info", p.getDisplayName(), data.level(),
                 (int) data.xp(), (int) LevelingService.characterXpToNext(data.level())), false);
+        src.sendSuccess(() -> Component.translatable("command.leveledworld.perk_info", Math.max(0, data.perkPoints()),
+                data.spentPerkPoints()), false);
         src.sendSuccess(() -> Component.translatable("command.leveledworld.points", data.unspentPoints(),
                 data.points(RpgAttribute.HEALTH), data.points(RpgAttribute.STAMINA), data.points(RpgAttribute.MAGICKA)), false);
         for (Skill s : Skill.values()) {

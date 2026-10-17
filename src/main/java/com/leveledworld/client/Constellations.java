@@ -10,6 +10,7 @@ import java.util.Map;
  * {@code perks[i]} é o índice da estrela que representa o perk de tier i (levels 25/50/75/100).
  */
 public final class Constellations {
+    /** Símbolo decorativo desenhado atrás da árvore de perks. {@code perks} é legado (não usado). */
     public record Shape(float[][] stars, int[][] edges, int[] perks) {}
 
     private static final Map<Skill, Shape> SHAPES = new EnumMap<>(Skill.class);
@@ -33,7 +34,7 @@ public final class Constellations {
                 new int[][]{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}, {7, 0}, {1, 8}, {8, 5}, {7, 8}, {8, 3}},
                 new int[]{5, 7, 3, 1}));
         // Armadura: elmo com viseira
-        SHAPES.put(Skill.ARMOR, new Shape(
+        SHAPES.put(Skill.HEAVY_ARMOR, new Shape(
                 new float[][]{{-0.6f, 0.8f}, {-0.65f, 0}, {-0.45f, -0.6f}, {0, -0.85f}, {0.45f, -0.6f}, {0.65f, 0},
                         {0.6f, 0.8f}, {0, 0}, {0, 0.5f}},
                 new int[][]{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {1, 7}, {7, 5}, {7, 8}},
@@ -56,6 +57,34 @@ public final class Constellations {
                         {-0.55f, 0.8f}, {0.65f, 0.8f}, {0.05f, -0.95f}, {0.55f, -0.55f}, {0.3f, -0.45f}},
                 new int[][]{{0, 1}, {1, 2}, {2, 3}, {3, 6}, {6, 5}, {5, 4}, {4, 1}, {7, 8}, {8, 9}},
                 new int[]{5, 6, 0, 7}));
+        // Duas Mãos: martelo de guerra
+        SHAPES.put(Skill.TWO_HANDED, new Shape(
+                new float[][]{{0, -0.55f}, {0, 0.2f}, {0, 0.95f}, {-0.6f, -0.9f}, {0.6f, -0.9f}, {0.6f, -0.3f}, {-0.6f, -0.3f}},
+                new int[][]{{0, 1}, {1, 2}, {3, 4}, {4, 5}, {5, 6}, {6, 3}, {0, 3}, {0, 4}},
+                new int[]{2, 1, 6, 4}));
+        // Armadura Leve: pena
+        SHAPES.put(Skill.LIGHT_ARMOR, new Shape(
+                new float[][]{{-0.45f, 0.95f}, {-0.2f, 0.45f}, {0.05f, -0.05f}, {0.3f, -0.5f}, {0.5f, -0.95f},
+                        {-0.45f, 0.1f}, {-0.2f, -0.4f}, {0.1f, -0.85f}, {0.25f, 0.3f}, {0.5f, -0.15f}},
+                new int[][]{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {1, 5}, {2, 6}, {3, 7}, {1, 8}, {2, 9}},
+                new int[]{0, 5, 9, 4}));
+        // Furtividade: olho
+        SHAPES.put(Skill.SNEAK, new Shape(
+                new float[][]{{-0.95f, 0}, {-0.45f, -0.45f}, {0.45f, -0.45f}, {0.95f, 0}, {0.45f, 0.45f}, {-0.45f, 0.45f}, {0, 0}},
+                new int[][]{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 0}},
+                new int[]{5, 0, 3, 6}));
+        // Atletismo: asa
+        SHAPES.put(Skill.ATHLETICS, new Shape(
+                new float[][]{{-0.9f, 0.6f}, {-0.3f, 0.2f}, {0.3f, -0.3f}, {0.9f, -0.85f}, {0.6f, -0.2f}, {0.75f, 0.2f},
+                        {0.25f, 0.45f}, {-0.2f, 0.7f}},
+                new int[][]{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}, {7, 0}, {2, 4}, {1, 6}},
+                new int[]{0, 7, 5, 3}));
+        // Agricultura: espiga de trigo
+        SHAPES.put(Skill.FARMING, new Shape(
+                new float[][]{{0, 0.95f}, {0, 0.35f}, {0, -0.2f}, {0, -0.75f}, {-0.35f, 0.15f}, {0.35f, 0.15f},
+                        {-0.35f, -0.4f}, {0.35f, -0.4f}, {0, -1f}},
+                new int[][]{{0, 1}, {1, 2}, {2, 3}, {3, 8}, {1, 4}, {1, 5}, {2, 6}, {2, 7}},
+                new int[]{0, 4, 7, 8}));
     }
 
     public static Shape of(Skill skill) {
