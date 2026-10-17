@@ -2,6 +2,12 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.8.3
+- A **barra vermelha** (exausto) enche com o **dobro da velocidade** da recuperação normal da stamina, já contando
+  os pontos em Stamina e os perks. Se a stamina normal enche em 2s, a barra vermelha enche em 1s; se enche em 1s,
+  a vermelha enche em 0,5s. A espera antes de começar a encher também cai pela metade.
+- Configurável em `[stamina] exhaustedRegenMultiplier` (padrão 2.0).
+
 ## 0.8.2
 ### Exaustão mais punitiva
 - A barra vermelha precisa **encher até o fim** para o personagem voltar a correr e atacar. Antes bastava 30%.

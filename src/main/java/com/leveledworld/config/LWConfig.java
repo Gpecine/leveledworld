@@ -42,6 +42,7 @@ public final class LWConfig {
     public static final ModConfigSpec.DoubleValue STAMINA_REGEN_PER_POINT;
     public static final ModConfigSpec.IntValue STAMINA_REGEN_DELAY_TICKS;
     public static final ModConfigSpec.DoubleValue EXHAUSTION_RECOVERY;
+    public static final ModConfigSpec.DoubleValue EXHAUSTED_REGEN_MULTIPLIER;
     public static final ModConfigSpec.DoubleValue EXHAUSTED_MOVE_SPEED;
     public static final ModConfigSpec.DoubleValue EXHAUSTED_BREAK_SPEED;
 
@@ -142,6 +143,9 @@ public final class LWConfig {
         EXHAUSTION_RECOVERY = b.comment("Quando a stamina acaba, o personagem fica exausto (barra vermelha): não corre nem ataca",
                         "até a stamina voltar a esta fração da máxima (1.0 = barra cheia).")
                 .defineInRange("exhaustionEndsAt", 1.0, 0.0, 1.0);
+        EXHAUSTED_REGEN_MULTIPLIER = b.comment("Velocidade com que a barra vermelha (exausto) enche, em relação à recuperação normal",
+                        "(2.0 = o dobro: se a stamina normal enche em 2s, a barra vermelha enche em 1s).")
+                .defineInRange("exhaustedRegenMultiplier", 2.0, 0.1, 100.0);
         EXHAUSTED_MOVE_SPEED = b.comment("Multiplicador da velocidade de movimento enquanto exausto (0.5 = metade).")
                 .defineInRange("exhaustedMoveSpeed", 0.5, 0.0, 1.0);
         EXHAUSTED_BREAK_SPEED = b.comment("Multiplicador da velocidade de quebrar blocos enquanto exausto, com a mão ou qualquer",

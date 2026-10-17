@@ -262,10 +262,15 @@ public final class AttributeService {
             } else {
                 useStamina(player, cost);
             }
-        } else if (data.staminaRegenDelay > 0) {
-            data.staminaRegenDelay--;
-        } else if (data.stamina() < maxStamina) {
-            data.setStamina((float) Math.min(maxStamina, data.stamina() + regen));
+        } else {
+            // Exausto, a barra vermelha enche mais rápido (padrão: o dobro), inclusive a espera antes de começar,
+            // então o tempo total para encher cai na mesma proporção.
+            double speed = data.exhausted ? LWConfig.EXHAUSTED_REGEN_MULTIPLIER.get() : 1;
+            if (data.staminaRegenDelay > 0) {
+                data.staminaRegenDelay = Math.max(0, data.staminaRegenDelay - (int) Math.max(1, Math.round(speed)));
+            } else if (data.stamina() < maxStamina) {
+                data.setStamina((float) Math.min(maxStamina, data.stamina() + regen * speed));
+            }
         }
         if (data.magicka() < maxMagicka) {
             data.setMagicka((float) Math.min(maxMagicka, data.magicka() + LWConfig.MAGICKA_REGEN_PER_SECOND.get() / 20.0));

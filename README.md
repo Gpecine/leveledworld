@@ -72,6 +72,7 @@ Cada level do personagem dá **1 ponto** para investir na tela **K**:
 | Mana | +10 (base 100) | regenera 3/s; será usada pelo sistema de magias |
 
 **Exaustão**: se a stamina acabar, o personagem fica exausto (barra vermelha) até a barra **encher de novo**.
+A barra vermelha enche com o **dobro da velocidade** da stamina normal: se a stamina enche em 2s, ela enche em 1s.
 Enquanto isso, ele não corre nem ataca, o arco dispara fraco, e ele anda e quebra blocos na **metade da velocidade**.
 A redução vale para a mão e para qualquer ferramenta, sobre a velocidade final (já com Eficiência e Pressa).
 Os valores ficam em `[stamina]` na config do servidor.
