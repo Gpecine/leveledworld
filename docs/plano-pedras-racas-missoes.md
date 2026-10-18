@@ -1,6 +1,11 @@
 # Plano: Pedras Guardiãs, Raças e Missões
 
-Três sistemas novos, entregues em três versões: **0.9.0 Pedras Guardiãs**, **0.9.1 Raças** e **0.10.0 Missões**.
+> **Atualização (0.9.0):** a prioridade passou a ser deixar a base sólida com os mobs vanilla antes de adicionar
+> conteúdo próprio. A 0.9.0 virou **Tiers de mobs** (veja o CHANGELOG). As **Raças** estão aprovadas, com o
+> **Khajiit** no lugar do Felino, e vão ganhar skins próprias feitas pelo autor. As **Missões (contratos)** foram
+> adiadas. Nova ordem na seção 4.
+
+Três sistemas novos: **Pedras Guardiãs**, **Raças** e **Missões**.
 Todos se ligam ao que já existe (skills, perks, level dos mobs, tomos, loot) e são configuráveis. A arte (blocos,
 ícones) entra com **arte provisória minha**, que você troca pela sua quando quiser (veja o tutorial de arte).
 
@@ -64,7 +69,7 @@ No primeiro login, uma tela pede para escolher a raça. A raça dá **bônus ini
 | **Elfo** | +10 Arquearia, +10 Furtividade | 50% de resistência a veneno; +10% de velocidade em florestas | **Olhos da Floresta**: mobs num raio de 32 blocos brilham por 30 s | 100% |
 | **Orc** | +10 Duas Mãos, +10 Armadura Pesada | +15% de vida máxima | **Fúria**: +50% de dano corpo a corpo por 30 s | 108% |
 | **Nórdico do Gelo** | +10 Uma Mão, +10 Bloqueio | Imune a congelamento (neve fofa); 50% de resistência a frio | **Grito de Guerra**: mobs num raio de 10 blocos fogem por 10 s | 105% |
-| **Felino** | +10 Furtividade, +10 Atletismo | Ataques desarmados +4 de dano; sem dano de queda até 6 blocos | **Visão Noturna**: liga e desliga, sem recarga | 95% |
+| **Khajiit** | +10 Furtividade, +5 Arquearia, +5 Uma Mão, +5 Atletismo | **Garras**: ataques desarmados +4 de dano; sem dano de queda até 6 blocos | **Olho Noturno**: visão noturna, liga e desliga, sem recarga | 95% |
 | **Anfíbio** | +10 Atletismo, +10 Agricultura | Respira embaixo d'água; nada 30% mais rápido | **Regeneração**: Regeneração II por 20 s | 100% |
 
 - **Mundos existentes**: na primeira entrada depois da atualização, a tela de raça aparece e os bônus são somados
@@ -136,11 +141,12 @@ recompensa.
 
 ## 4. Ordem e esforço
 
-| Versão | Conteúdo | Depende de |
+| Versão | Conteúdo | Situação |
 |---|---|---|
-| **0.9.0** | Pedras Guardiãs: bloco, geração no mundo, bênçãos, 3 poderes, tecla "Usar poder", HUD de recarga | — |
-| **0.9.1** | Raças: tela de escolha, bônus, passivas, 7 poderes, escala, Poção da Renovação | Tecla de poder da 0.9.0 |
-| **0.10.0** | Missões: Quadro de Contratos, 6 tipos, mobs Procurados, diário `J`, rastreador no HUD, geração nas vilas | Poção da Renovação da 0.9.1 (recompensa) |
+| **0.9.0** | Tiers de mobs (comum → exótico), produtos com tier, reprodução | Feito |
+| a definir | Pedras Guardiãs: bloco, geração no mundo, bênçãos, 3 poderes, tecla "Usar poder", HUD de recarga | Planejado |
+| a definir | Raças (com Khajiit): tela de escolha, bônus, passivas, poderes, escala, skins do autor | Aprovado |
+| — | Missões: Quadro de Contratos, mobs Procurados, diário `J` | Adiado |
 
 Cada versão vai para `releases/` no GitHub, testada no cliente virtual antes da entrega.
 

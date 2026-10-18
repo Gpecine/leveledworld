@@ -2,6 +2,7 @@ package com.leveledworld.client;
 
 import com.leveledworld.LeveledWorld;
 import com.leveledworld.config.LWClientConfig;
+import com.leveledworld.mob.MobTier;
 import com.leveledworld.network.ClientRpgData;
 import com.leveledworld.network.SyncRpgDataPayload;
 import com.leveledworld.player.RpgAttachments;
@@ -22,7 +23,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import org.joml.Matrix4f;
 
-/** Desenha "Nome Lv. X" e uma barra de vida acima de cada mob escalado. */
+/**
+ * Desenha o level, o tier e uma barra de vida acima de cada mob escalado. Animais (sem level) só ganham placa a
+ * partir do tier Incomum. A moldura fica na cor do tier a partir do Raro.
+ */
 @EventBusSubscriber(modid = LeveledWorld.MODID, value = Dist.CLIENT)
 public final class MobNameplateRenderer {
     private static final float SCALE = 0.025F;
@@ -32,7 +36,10 @@ public final class MobNameplateRenderer {
     @SubscribeEvent
     public static void onRenderLiving(RenderLivingEvent.Post<?, ?> event) {
         LivingEntity entity = event.getEntity();
-        if (!(entity instanceof Mob) || !entity.hasData(RpgAttachments.MOB_LEVEL)) return;
+        if (!(entity instanceof Mob)) return;
+        boolean hasLevel = entity.hasData(RpgAttachments.MOB_LEVEL);
+        MobTier tier = entity.hasData(RpgAttachments.MOB_TIER) ? MobTier.byIndex(entity.getData(RpgAttachments.MOB_TIER)) : MobTier.COMMON;
+        if (!hasLevel && tier == MobTier.COMMON) return;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui || !LWClientConfig.SHOW_NAMEPLATES.get()) return;
@@ -42,10 +49,13 @@ public final class MobNameplateRenderer {
         if (mc.getEntityRenderDispatcher().distanceToSqr(entity) > maxDist * maxDist) return;
         if (!mc.player.hasLineOfSight(entity)) return;
 
-        int mobLevel = entity.getData(RpgAttachments.MOB_LEVEL);
+        int mobLevel = hasLevel ? entity.getData(RpgAttachments.MOB_LEVEL) : 0;
         Difficulty diff = difficulty(mobLevel);
         Component levelText = Component.literal(diff == Difficulty.DEADLY ? "\u2620 " + mobLevel : String.valueOf(mobLevel));
         Component name = entity.getType().getDescription();
+        int tierColor = tierColor(tier);
+        Component tierText = tier == MobTier.COMMON ? null
+                : Component.literal(Component.translatable(tier.translationKey()).getString().toUpperCase(java.util.Locale.ROOT));
 
         PoseStack pose = event.getPoseStack();
         MultiBufferSource buffers = event.getMultiBufferSource();
@@ -61,9 +71,10 @@ public final class MobNameplateRenderer {
 
         Font font = mc.font;
         boolean showBar = LWClientConfig.SHOW_HEALTH_BAR.get();
-        int badgeW = font.width(levelText) + 6;
+        int badgeW = hasLevel ? font.width(levelText) + 6 : 0;
+        int tierW = tierText != null ? font.width(tierText) + 4 : 0;
         int nameW = font.width(name);
-        int contentW = Math.max(badgeW + 3 + nameW, showBar ? BAR_WIDTH : 0);
+        int contentW = Math.max(badgeW + (hasLevel ? 3 : 0) + tierW + nameW, showBar ? BAR_WIDTH : 0);
         float l = -contentW / 2f;
         float r = contentW / 2f;
         float top = -13;
@@ -72,18 +83,26 @@ public final class MobNameplateRenderer {
         // Neste espaço z negativo = mais longe da câmera: fundo e barra ficam atrás do texto (z = 0).
         VertexConsumer vc = buffers.getBuffer(RenderType.textBackground());
         quad(vc, m, l - 3, top - 2, r + 3, bottom + 2, -5f, 0xB0100E16, 0xB0100E16, light);
-        // moldura dourada fina
-        quad(vc, m, l - 4, top - 3, r + 4, top - 2, -5f, GOLD, GOLD, light);
-        quad(vc, m, l - 4, bottom + 2, r + 4, bottom + 3, -5f, GOLD_DARK, GOLD_DARK, light);
-        quad(vc, m, l - 4, top - 2, l - 3, bottom + 2, -5f, GOLD, GOLD_DARK, light);
-        quad(vc, m, r + 3, top - 2, r + 4, bottom + 2, -5f, GOLD, GOLD_DARK, light);
+        // moldura fina: dourada, ou na cor do tier a partir do Raro
+        int frameTop = tier.ordinal() >= MobTier.RARE.ordinal() ? tierColor : GOLD;
+        int frameBottom = tier.ordinal() >= MobTier.RARE.ordinal() ? darken(tierColor) : GOLD_DARK;
+        quad(vc, m, l - 4, top - 3, r + 4, top - 2, -5f, frameTop, frameTop, light);
+        quad(vc, m, l - 4, bottom + 2, r + 4, bottom + 3, -5f, frameBottom, frameBottom, light);
+        quad(vc, m, l - 4, top - 2, l - 3, bottom + 2, -5f, frameTop, frameBottom, light);
+        quad(vc, m, r + 3, top - 2, r + 4, bottom + 2, -5f, frameTop, frameBottom, light);
         // medalhão do level na cor da dificuldade
         float bx = l;
-        quad(vc, m, bx, top, bx + badgeW, top + 11, -3f, diff.top, diff.bottom, light);
+        if (hasLevel) quad(vc, m, bx, top, bx + badgeW, top + 11, -3f, diff.top, diff.bottom, light);
 
         float textY = top + 2;
-        font.drawInBatch(levelText, bx + 3, textY, 0xFF140E06, false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
-        font.drawInBatch(name, bx + badgeW + 3, textY, 0xFFF0EADA, false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
+        float x = bx + (hasLevel ? badgeW + 3 : 0);
+        if (hasLevel) font.drawInBatch(levelText, bx + 3, textY, 0xFF140E06, false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
+        if (tierText != null) {
+            font.drawInBatch(tierText, x, textY, tierColor, false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
+            x += tierW;
+        }
+        int nameColor = tier == MobTier.COMMON ? 0xFFF0EADA : tierColor;
+        font.drawInBatch(name, x, textY, nameColor, false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
 
         if (showBar) {
             // Pegar o buffer de novo: o drawInBatch acima pediu o buffer de texto, o que encerra o batch
@@ -103,6 +122,19 @@ public final class MobNameplateRenderer {
     }
 
     private static final int GOLD = 0xFFC9A44C;
+
+    /** Cor do tier; o Exótico pulsa entre rosa e ciano. */
+    static int tierColor(MobTier tier) {
+        if (tier != MobTier.EXOTIC) return tier.color;
+        float t = 0.5f + 0.5f * Mth.sin((System.currentTimeMillis() % 3000) / 3000f * Mth.TWO_PI);
+        int r = (int) Mth.lerp(t, 0xFF, 0x4F), g = (int) Mth.lerp(t, 0x4F, 0xE8), b = (int) Mth.lerp(t, 0xD8, 0xFF);
+        return 0xFF000000 | r << 16 | g << 8 | b;
+    }
+
+    private static int darken(int argb) {
+        int r = (argb >> 16 & 0xFF) * 2 / 5, g = (argb >> 8 & 0xFF) * 2 / 5, b = (argb & 0xFF) * 2 / 5;
+        return 0xFF000000 | r << 16 | g << 8 | b;
+    }
     private static final int GOLD_DARK = 0xFF5E4A20;
 
     /** Dificuldade pela diferença entre o level do mob e o do jogador (estilo MMO). */

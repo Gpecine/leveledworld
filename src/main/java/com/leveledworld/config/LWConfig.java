@@ -60,6 +60,13 @@ public final class LWConfig {
     // Dimensões
     public static final ModConfigSpec.ConfigValue<java.util.List<? extends String>> DIMENSION_RULES;
 
+    // Tiers de mobs
+    public static final ModConfigSpec.BooleanValue TIERS_ENABLED;
+    public static final ModConfigSpec.ConfigValue<java.util.List<? extends Double>> TIER_WEIGHTS;
+    public static final ModConfigSpec.DoubleValue TIER_LEVEL_BOOST;
+    public static final ModConfigSpec.BooleanValue TIER_SPAWNER_MOBS;
+    public static final ModConfigSpec.ConfigValue<String> TIER_ANNOUNCE;
+
     // Recompensas
     public static final ModConfigSpec.DoubleValue XP_PER_LEVEL;
     public static final ModConfigSpec.DoubleValue DROPS_PER_LEVEL;
@@ -186,6 +193,25 @@ public final class LWConfig {
                         java.util.List.of("minecraft:the_nether,5,10,10,1.5,0.15", "minecraft:the_end,10,20,20,2.0,0.20"),
                         () -> "minecraft:the_nether,5,10,10,1.5,0.15",
                         com.leveledworld.mob.DimensionRules::isValid);
+        b.pop();
+
+        b.push("tiers");
+        TIERS_ENABLED = b.comment("Mobs agressivos e animais nascem com um tier de raridade: comum, incomum, raro, épico, lendário ou exótico.")
+                .define("enabled", true);
+        TIER_WEIGHTS = b.comment("Peso base de cada tier no sorteio, na ordem comum, incomum, raro, épico, lendário, exótico",
+                        "(com o padrão, são as porcentagens: 60%, 25%, 10%, 4%, 0,9%, 0,1%).")
+                .defineList("weights", java.util.List.of(60.0, 25.0, 10.0, 4.0, 0.9, 0.1), () -> 1.0,
+                        o -> o instanceof Number n && n.doubleValue() >= 0);
+        TIER_LEVEL_BOOST = b.comment("Quanto os tiers altos ficam mais comuns por level. O peso do tier N é multiplicado por",
+                        "(1 + level × boost)^N. O level é o do mob (agressivos) ou o do jogador mais próximo (animais), somado ao",
+                        "bônus de loot da dimensão. Com 0.006: level 50 → exótico 0,3%; level 100 → 0,7%; level 250 → 3,3%.")
+                .defineInRange("levelBoost", 0.006, 0.0, 1.0);
+        TIER_SPAWNER_MOBS = b.comment("Mobs de spawner também podem ter tier (padrão: não, sempre comuns, contra farm).")
+                .define("spawnerMobsCanHaveTiers", false);
+        TIER_ANNOUNCE = b.comment("A partir de qual tier o surgimento de um mob é avisado aos jogadores num raio de 48 blocos",
+                        "(common, uncommon, rare, epic, legendary, exotic ou none).")
+                .define("announceFrom", "exotic", o -> o instanceof String str
+                        && (str.equals("none") || com.leveledworld.mob.MobTier.byId(str) != null));
         b.pop();
 
         b.push("rewards");

@@ -64,19 +64,11 @@ public final class MobRewardEvents {
         }
 
         // Loot bônus: só quando o jogador participou da morte.
-        Player killer = mob.getLastHurtByMob() instanceof Player p ? p : null;
-        if (killer == null && event.getSource().getEntity() instanceof Player p) killer = p;
+        Player killer = killer(event);
         if (killer == null) return;
 
         DimensionRules.Rule rule = DimensionRules.of(level);
-        LootParams params = new LootParams.Builder(level)
-                .withParameter(LootContextParams.THIS_ENTITY, mob)
-                .withParameter(LootContextParams.ORIGIN, mob.position())
-                .withParameter(LootContextParams.DAMAGE_SOURCE, event.getSource())
-                .withOptionalParameter(LootContextParams.ATTACKING_ENTITY, killer)
-                .withOptionalParameter(LootContextParams.LAST_DAMAGE_PLAYER, killer)
-                .withLuck(killer.getLuck())
-                .create(LootContextParamSets.ENTITY);
+        LootParams params = lootParams(event, level, mob, killer);
 
         // Loot bônus por raridade; dimensões perigosas aumentam a chance e o "level de loot".
         int lootLevel = mobLevel + rule.lootLevelBonus();
@@ -104,8 +96,25 @@ public final class MobRewardEvents {
         }
     }
 
+    /** Jogador que participou da morte (último a ferir ou quem deu o golpe final), ou null. */
+    static Player killer(LivingDropsEvent event) {
+        if (event.getEntity().getLastHurtByMob() instanceof Player p) return p;
+        return event.getSource().getEntity() instanceof Player p ? p : null;
+    }
+
+    static LootParams lootParams(LivingDropsEvent event, ServerLevel level, Mob mob, Player killer) {
+        return new LootParams.Builder(level)
+                .withParameter(LootContextParams.THIS_ENTITY, mob)
+                .withParameter(LootContextParams.ORIGIN, mob.position())
+                .withParameter(LootContextParams.DAMAGE_SOURCE, event.getSource())
+                .withOptionalParameter(LootContextParams.ATTACKING_ENTITY, killer)
+                .withOptionalParameter(LootContextParams.LAST_DAMAGE_PLAYER, killer)
+                .withLuck(killer.getLuck())
+                .create(LootContextParamSets.ENTITY);
+    }
+
     /** Rola a tabela e adiciona os itens aos drops; retorna se caiu algo. */
-    private static boolean drop(LivingDropsEvent event, ServerLevel level, Mob mob, LootTable table,
+    static boolean drop(LivingDropsEvent event, ServerLevel level, Mob mob, LootTable table,
                                 LootParams params, boolean glow) {
         List<ItemStack> loot = new ArrayList<>(table.getRandomItems(params));
         for (ItemStack stack : loot) {

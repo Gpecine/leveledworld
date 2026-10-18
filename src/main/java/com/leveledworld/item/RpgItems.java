@@ -19,6 +19,10 @@ public final class RpgItems {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<TomeData>> TOME = COMPONENTS.registerComponentType(
             "tome", b -> b.persistent(TomeData.CODEC).networkSynchronized(TomeData.STREAM_CODEC));
 
+    /** Tier de raridade de um produto animal (couro, lã, carne...) ou de algo fabricado com ele. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> TIER = COMPONENTS.registerComponentType(
+            "tier", b -> b.persistent(com.mojang.serialization.Codec.INT).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_INT));
+
     /** Tomo de skill: encontrado no loot, dá níveis numa skill. */
     public static final DeferredItem<SkillTomeItem> SKILL_TOME = ITEMS.registerItem("skill_tome",
             p -> new SkillTomeItem(p, false), new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON));

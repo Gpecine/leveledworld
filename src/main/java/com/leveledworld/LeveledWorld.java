@@ -22,6 +22,7 @@ public class LeveledWorld {
         RpgSounds.SOUND_EVENTS.register(modBus);
         RpgEffects.MOB_EFFECTS.register(modBus);
         com.leveledworld.item.RpgItems.register(modBus);
+        com.leveledworld.recipe.TieredCooking.register(modBus);
         modBus.addListener(RpgNetwork::register);
         container.registerConfig(ModConfig.Type.SERVER, LWConfig.SPEC);
         container.registerConfig(ModConfig.Type.CLIENT, LWClientConfig.SPEC);

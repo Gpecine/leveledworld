@@ -25,6 +25,12 @@ public final class RpgAttachments {
                     .serialize(Codec.INT)
                     .build());
 
+    /** Tier de raridade do mob (índice de {@link com.leveledworld.mob.MobTier}). Ausente = ainda não sorteado. */
+    public static final Supplier<AttachmentType<Integer>> MOB_TIER = ATTACHMENT_TYPES.register("mob_tier",
+            () -> AttachmentType.builder(() -> 0)
+                    .serialize(Codec.INT)
+                    .build());
+
     /** Mob nascido de spawner (XP de combate reduzido). */
     public static final Supplier<AttachmentType<Boolean>> FROM_SPAWNER = ATTACHMENT_TYPES.register("from_spawner",
             () -> AttachmentType.builder(() -> false).serialize(Codec.BOOL).build());

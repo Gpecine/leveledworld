@@ -2,6 +2,9 @@ package com.leveledworld.command;
 
 import com.leveledworld.LeveledWorld;
 import com.leveledworld.mob.MobScaling;
+import com.leveledworld.mob.MobTier;
+import com.leveledworld.mob.MobTierEvents;
+import com.leveledworld.mob.MobTiers;
 import com.leveledworld.network.RpgNetwork;
 import com.leveledworld.player.AttributeService;
 import com.leveledworld.player.LevelingService;
@@ -46,6 +49,8 @@ import java.util.Arrays;
  */
 @EventBusSubscriber(modid = LeveledWorld.MODID)
 public final class RpgCommand {
+    private static final DynamicCommandExceptionType UNKNOWN_TIER =
+            new DynamicCommandExceptionType(id -> Component.translatable("command.leveledworld.unknown_tier", id));
     private static final DynamicCommandExceptionType UNKNOWN_PERK =
             new DynamicCommandExceptionType(id -> Component.translatable("command.leveledworld.unknown_perk", id));
     private static final DynamicCommandExceptionType UNKNOWN_SKILL =
@@ -159,9 +164,30 @@ public final class RpgCommand {
                                     Entity e = EntityArgument.getEntity(c, "target");
                                     int lvl = e instanceof Mob m ? MobScaling.getLevel(m) : 0;
                                     c.getSource().sendSuccess(() -> Component.translatable("command.leveledworld.mob",
-                                            e.getDisplayName(), lvl), false);
+                                            e.getDisplayName(), lvl, MobTiers.get(e).displayName()), false);
                                     return lvl;
-                                }))));
+                                })))
+                .then(Commands.literal("mobtier").requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("targets", EntityArgument.entities())
+                                .then(Commands.argument("tier", StringArgumentType.word())
+                                        .suggests((c, b) -> SharedSuggestionProvider.suggest(
+                                                Arrays.stream(MobTier.values()).map(MobTier::id), b))
+                                        .executes(c -> {
+                                            String id = StringArgumentType.getString(c, "tier");
+                                            MobTier tier = MobTier.byId(id);
+                                            if (tier == null) throw UNKNOWN_TIER.create(id);
+                                            int n = 0;
+                                            for (Entity e : EntityArgument.getEntities(c, "targets")) {
+                                                if (e instanceof Mob m && MobTiers.canHaveTier(m)) {
+                                                    MobTierEvents.setTier(m, tier);
+                                                    n++;
+                                                }
+                                            }
+                                            int count = n;
+                                            c.getSource().sendSuccess(() -> Component.translatable("command.leveledworld.mobtier",
+                                                    count, tier.displayName()), true);
+                                            return n;
+                                        })))));
     }
 
     private static com.mojang.brigadier.builder.RequiredArgumentBuilder<CommandSourceStack, String> skillArg() {

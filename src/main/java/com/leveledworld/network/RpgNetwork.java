@@ -81,9 +81,11 @@ public final class RpgNetwork {
 
     private static void handleMobLevel(MobLevelPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            // Guarda o level no attachment da entidade do lado do cliente; o renderer lê de lá.
+            // Guarda level e tier nos attachments da entidade do lado do cliente; o renderer lê de lá.
             Entity entity = context.player().level().getEntity(payload.entityId());
-            if (entity != null) entity.setData(RpgAttachments.MOB_LEVEL, payload.level());
+            if (entity == null) return;
+            if (payload.level() > 0) entity.setData(RpgAttachments.MOB_LEVEL, payload.level());
+            entity.setData(RpgAttachments.MOB_TIER, payload.tier());
         });
     }
 

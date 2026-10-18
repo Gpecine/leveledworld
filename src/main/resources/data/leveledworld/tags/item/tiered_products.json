@@ -1,0 +1,23 @@
+{
+  "values": [
+    "minecraft:leather",
+    "minecraft:rabbit_hide",
+    "minecraft:rabbit_foot",
+    "minecraft:feather",
+    "#minecraft:wool",
+    "minecraft:beef",
+    "minecraft:cooked_beef",
+    "minecraft:porkchop",
+    "minecraft:cooked_porkchop",
+    "minecraft:mutton",
+    "minecraft:cooked_mutton",
+    "minecraft:chicken",
+    "minecraft:cooked_chicken",
+    "minecraft:rabbit",
+    "minecraft:cooked_rabbit",
+    "minecraft:egg",
+    "minecraft:milk_bucket",
+    "minecraft:pumpkin_pie",
+    "minecraft:rabbit_stew"
+  ]
+}

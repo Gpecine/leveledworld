@@ -173,6 +173,10 @@ public final class FarmingPerkEvents {
         twin.setBaby(true);
         twin.moveTo(parent.getX(), parent.getY(), parent.getZ(), 0, 0);
         twin.finalizeSpawn(level, level.getCurrentDifficultyAt(parent.blockPosition()), MobSpawnType.BREEDING, null);
+        // O gêmeo segue a mesma regra de herança de tier do filhote principal.
+        if (com.leveledworld.mob.MobTiers.canHaveTier(twin)) {
+            com.leveledworld.mob.MobTiers.apply(twin, com.leveledworld.mob.MobTiers.inherit(parent, other, twin.getRandom()), true);
+        }
         level.addFreshEntity(twin);
         player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.leveledworld.twins")
                 .withStyle(net.minecraft.ChatFormatting.GREEN), true);

@@ -2,6 +2,64 @@
 
 Todos os jars ficam em [`releases/`](releases/) e também na aba **Releases** do GitHub.
 
+## 0.9.0 — Tiers de mobs
+Mobs agressivos e animais nascem com um **tier de raridade**: **Comum**, **Incomum**, **Raro**, **Épico**, **Lendário**
+ou **Exótico**.
+
+### Chance de cada tier
+| Tier | Cor | Chance base | Level 50 | Level 100 | Level 250 |
+|---|---|---|---|---|---|
+| Comum | branco | 60% | 50% | 40% | 21% |
+| Incomum | verde | 25% | 27% | 27% | 21% |
+| Raro | azul | 10% | 14% | 17% | 21% |
+| Épico | roxo | 4% | 7% | 11% | 21% |
+| Lendário | laranja | 0,9% | 2,1% | 4% | 12% |
+| Exótico | rosa/ciano (animado) | 0,1% | 0,3% | 0,7% | 3,3% |
+
+- O level que conta é o do mob (agressivos) ou o do jogador mais próximo (animais). No Nether e no End os tiers
+  altos ficam mais comuns (bônus de loot da dimensão).
+- Mobs de spawner são sempre comuns (anti-farm). Chefes (Wither, Dragão, Warden, Guardião Ancião) não têm tier.
+
+### Mobs agressivos
+| Tier | Vida e dano | Drops | XP | Loot extra (morto por jogador) |
+|---|---|---|---|---|
+| Incomum | +5% | ×1,25 | ×1,25 | 30% de chance de loot comum |
+| Raro | +10% | ×1,5 | ×1,5 | 1 loot incomum |
+| Épico | +15% | ×2 | ×2 | 1 loot raro + 25% de loot incomum |
+| Lendário | +25% | ×2,5 | ×3 | 1 loot lendário (diamantes, equipamento e livros nível 30–39) + 1 raro |
+| Exótico | +40% | ×3 | ×5 | 1 loot exótico (netherite, totem, maçã encantada...) + 1 lendário + 1 tomo de skill |
+
+### Animais
+- Mais produtos: drops ao morrer, lã na tosquia e ovos ×1,25 a ×3 conforme o tier. Galinhas de tier alto também
+  botam ovos mais rápido.
+- Mais vida (+10% a +75%). Lobos também batem mais forte; cavalos, burros, mulas, lhamas e camelos ficam mais
+  rápidos e pulam mais alto (+4% a +25%).
+- **Reprodução**: o filhote herda o tier de um dos pais: **90%** o mesmo tier, **9%** um acima e **1%** um abaixo.
+  Ex.: duas vacas Raras → 90% Raro, 9% Épico, 1% Incomum. O perk Gêmeos segue a mesma regra.
+
+### Produtos com tier
+- Couro, pele e pé de coelho, penas, lã, carnes, ovos e leite de animais de tier saem **marcados com o tier**:
+  é o mesmo item vanilla, com o nome colorido e o tier no tooltip. Funcionam em qualquer receita.
+  A lista fica na tag `leveledworld:tiered_products` (editável por datapack).
+- **Cozinhar mantém o tier**: na fornalha, no defumador e na fogueira, carne crua Rara vira carne assada Rara.
+- **Comida melhor**: alimenta +15% a +100%. Épico dá Regeneração; Lendário, Regeneração e Absorção; Exótico,
+  Regeneração II, Absorção II e Força. O leite de tier dá os mesmos efeitos.
+- **Fabricação**: equipamento feito com material de tier ganha +10% a +50% de armadura e durabilidade (ex.: armadura
+  de couro Lendário). O resultado leva o tier do pior ingrediente animal. Comida fabricada (torta de abóbora,
+  ensopado de coelho) e couro feito de peles de coelho também herdam o tier.
+- **Aldeões pagam mais**: vender um produto de tier paga ×1,25 a ×5 esmeraldas.
+
+### Visual
+- Placa do mob com o tier em destaque e o nome na cor do tier. A moldura fica na cor do tier a partir do Raro.
+  Animais ganham placa a partir do Incomum.
+- Partículas na cor do tier em volta de mobs Épicos, Lendários e Exóticos (com faíscas no Exótico).
+- Aviso no chat, com som, quando um mob Exótico surge a até 48 blocos (configurável).
+
+### Configuração e comandos
+- `[tiers]` em `leveledworld-server.toml`: ligar/desligar, pesos de cada tier, quanto o level aumenta os tiers altos,
+  tier em mobs de spawner e a partir de qual tier avisar.
+- `/rpg mob <entidade>` agora mostra o tier. `/rpg mobtier <entidades> <tier>` define o tier (admin).
+
 ## 0.8.5
 - A restrição de blocos colocados por jogadores foi **retirada de todas as ações em área**. A **Derrubada** agora
   também derruba árvores com troncos colocados à mão (a Mineração em Veio já fazia isso desde a 0.8.4).

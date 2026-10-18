@@ -89,6 +89,16 @@ level do mob = level do jogador × aleatório(0.8 … 1.2)
 - O level fica salvo no mob — recarregar o chunk não muda nada.
 - Sem jogador por perto, usa a média de level dos jogadores da dimensão (ou 1 se não houver ninguém).
 
+### Tiers de mobs
+Mobs agressivos e animais nascem com um tier: **Comum, Incomum, Raro, Épico, Lendário ou Exótico** (60% / 25% / 10% /
+4% / 0,9% / 0,1% na base; os tiers altos ficam mais comuns com o level e no Nether/End).
+- **Agressivos**: um pouco mais fortes (+5% a +40% de vida e dano), com mais drops, mais XP e loot extra (do loot
+  incomum até netherite, totem e tomos no Exótico).
+- **Animais**: mais produtos marcados com o tier (couro, lã, carne, ovos, leite), que rendem comida melhor,
+  equipamento mais forte e mais esmeraldas com aldeões. Cavalos e lobos de tier alto são melhores.
+- **Reprodução**: o filhote herda o tier dos pais (90% igual, 9% sobe, 1% desce).
+- Detalhes no [CHANGELOG](CHANGELOG.md#090--tiers-de-mobs).
+
 ### Dimensões
 | Dimensão | Mobs | Recompensas |
 |---|---|---|
@@ -130,7 +140,8 @@ Configurável em `[dimensions]` na config do servidor, incluindo dimensões de o
 | `/rpg perks give <jogador> <perk> [rank]` — dá um perk direto, ex.: `mining.mineracao_veio` | OP |
 | `/rpg tome <jogador> <skill> [levels]` — dá um tomo de skill | OP |
 | `/rpg stamina drain <jogador>` / `/rpg stamina refill <jogador>` — zera (deixa exausto) ou enche a stamina | OP |
-| `/rpg mob <entidade>` — mostra o level de um mob | OP |
+| `/rpg mob <entidade>` — mostra o level e o tier de um mob | OP |
+| `/rpg mobtier <entidades> <tier>` — define o tier (common, uncommon, rare, epic, legendary, exotic) | OP |
 
 ## Configuração
 `config/leveledworld-server.toml` (pode ser sobrescrito por mundo em `saves/<mundo>/serverconfig/`) — multiplicador de XP, levels máximos,
